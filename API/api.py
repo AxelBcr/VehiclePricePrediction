@@ -5,6 +5,10 @@ from pydantic import BaseModel
 import pickle
 import numpy as np
 
+import warnings
+from sklearn.exceptions import InconsistentVersionWarning
+warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
+
 
 # --- Schéma de requête ---
 class FullPredictionRequest(BaseModel):
@@ -32,6 +36,7 @@ try:
     encoder_modele = model_package["encoder_modele"]
     encoder_energie = model_package["encoder_energie"]
     encoder_carburant = model_package["encoder_carburant"]
+    model_std = model_package["model_std"]
 
 except Exception as e:
     raise RuntimeError(f"Erreur lors du chargement de vehicle_price_model.pkl : {e}")
@@ -81,4 +86,4 @@ def predict_full(request: FullPredictionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur de prédiction : {e}")
 
-    return {"predicted_price": y_pred}
+    return {"predicted_price": y_pred, "ic_0.95": [y_pred - 1.96 * model_std, y_pred + 1.96 * model_std]}
