@@ -1,1 +1,7 @@
 uvicorn api:app --host 0.0.0.0 --port 8001 --reload
+
+python -m uvicorn api:app --reload --port 8000
+
+cd C:\Users\Axel\PycharmProjects\MLPVehiclePrice\frontend
+npm install
+npm run dev

@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLPVehiclePrice — Estimation Prix Véhicule</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0c0e13;
+            --bg-card: #14171e;
+            --bg-input: #1a1e28;
+            --border: #252a36;
+            --border-focus: #3b82f6;
+            --text-primary: #e8eaf0;
+            --text-secondary: #8b92a5;
+            --text-muted: #555d73;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --success: #22c55e;
+            --success-glow: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-glow: rgba(245, 158, 11, 0.1);
+            --danger: #ef4444;
+            --radius: 10px;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            position: relative;
+            z-index: 1;
+            padding: 2.5rem 2rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(59,130,246,0.04) 0%, transparent 100%);
+        }
+
+        header .badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-glow);
+            border: 1px solid rgba(59,130,246,0.2);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+        }
+
+        header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+        header h1 span { color: var(--accent); }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            max-width: 480px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+            max-width: 920px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 720px) { main { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+        }
+
+        .card-title {
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: var(--accent);
+        }
+
+        .card-title.orange::before { background: var(--orange); }
+
+        .form-group { margin-bottom: 1rem; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b92a5' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-group input::placeholder { color: var(--text-muted); }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+        .btn-predict {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+        }
+
+        .btn-predict:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.3); }
+        .btn-predict:active:not(:disabled) { transform: translateY(0); }
+        .btn-predict:disabled { opacity: 0.5; cursor: wait; }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .result-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .result-empty .icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.3; }
+
+        .result-content { display: none; }
+        .result-content.visible { display: block; }
+
+        .price-display { text-align: center; padding: 2rem 1rem 1.5rem; }
+
+        .price-label {
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .price-value {
+            font-family: var(--font-mono);
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: var(--success);
+            text-shadow: 0 0 40px var(--success-glow);
+            line-height: 1.1;
+        }
+
+        .price-value .currency { font-size: 1.6rem; color: var(--text-secondary); margin-left: 0.15em; }
+
+        .confidence-bar { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+
+        .confidence-label {
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            text-align: center;
+        }
+
+        .confidence-track { position: relative; height: 6px; background: var(--bg-input); border-radius: 3px; margin: 0 auto; max-width: 400px; }
+
+        .confidence-fill {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, var(--orange), var(--success));
+            border-radius: 3px;
+            transition: left 0.6s ease, width 0.6s ease;
+        }
+
+        .confidence-values {
+            display: flex;
+            justify-content: space-between;
+            max-width: 400px;
+            margin: 0.5rem auto 0;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+
+        .vehicle-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .summary-item { text-align: center; }
+        .summary-item .label { font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .summary-item .value { font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error-msg.visible { display: block; }
+
+        /* --- CSV Section --- */
+        .csv-zone {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: border-color 0.2s, background 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .csv-zone:hover, .csv-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .csv-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .csv-zone .icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4; }
+
+        .csv-zone .label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .csv-zone .sublabel {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .csv-status {
+            margin-top: 1rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .csv-status.visible { display: block; }
+
+        .csv-status.error { color: var(--danger); }
+        .csv-status.success { color: var(--success); }
+
+        .csv-format {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .csv-format summary {
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+            letter-spacing: 0.05em;
+        }
+
+        .csv-format summary:hover { color: var(--text-secondary); }
+
+        .csv-format-content {
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .csv-format-content code {
+            display: block;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.6rem 0.75rem;
+            margin: 0.5rem 0;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--accent);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .csv-table-wrapper {
+            margin-top: 1rem;
+            overflow-x: auto;
+            max-height: 320px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .csv-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+        }
+
+        .csv-table-wrapper th {
+            position: sticky;
+            top: 0;
+            background: var(--bg-input);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 500;
+            padding: 0.5rem 0.6rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .csv-table-wrapper td {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid rgba(37,42,54,0.5);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .csv-table-wrapper tr:hover td { background: rgba(59,130,246,0.04); }
+
+        .csv-table-wrapper td.price { color: var(--success); font-weight: 700; }
+        .csv-table-wrapper td.error-cell { color: var(--danger); }
+
+        .btn-export {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.55rem 1.2rem;
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--success);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-export:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
+
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        footer a { color: var(--accent); text-decoration: none; }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 0.4rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up { animation: fadeUp 0.5s ease forwards; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="badge">MLP Neural Network</div>
+    <h1>Estimation <span>Prix Véhicule</span></h1>
+    <p>Prédiction du prix de reprise basée sur un réseau de neurones Multi-Layer Perceptron entraîné sur des données de ventes automobiles françaises.</p>
+</header>
+
+<main>
+    <!-- ===== Form Card ===== -->
+    <div class="card">
+        <div class="card-title">Informations véhicule</div>
+        <form id="predict-form" autocomplete="off">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="marque">Marque</label>
+                    <select id="marque" required>
+                        <option value="" disabled selected>Sélectionner…</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modele">Modèle</label>
+                    <input type="text" id="modele" placeholder="Ex: C5 AIRCROSS" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="annee_veh">Année du véhicule</label>
+                    <input type="number" id="annee_veh" placeholder="Ex: 2020" min="1990" max="2026" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="annee_facture">Année de la facture</label>
+                    <input type="number" id="annee_facture" placeholder="Ex: 2024" min="2000" max="2026" step="1" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="km">Kilométrage</label>
+                <input type="number" id="km" placeholder="Ex: 52335" min="0" step="1" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="energie">Type d'énergie</label>
+                    <select id="energie" required>
+                        <option value="" disabled selected>Sélectionner…</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="carburant">Carburant</label>
+                    <select id="carburant" required>
+                        <option value="" disabled selected>Sélectionner…</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-predict" id="btn-predict">
+                Estimer le prix
+            </button>
+
+            <div class="error-msg" id="error-msg"></div>
+        </form>
+    </div>
+
+    <!-- ===== Info Card ===== -->
+    <div class="card">
+        <div class="card-title">À propos du modèle</div>
+        <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.65;">
+            <p style="margin-bottom: 0.75rem;">
+                Ce modèle utilise un <strong style="color: var(--text-primary);">MLPRegressor</strong> (scikit-learn)
+                entraîné sur un jeu de données de ventes automobiles françaises (2020–2026).
+            </p>
+            <p style="margin-bottom: 0.75rem;">
+                Les features numériques subissent un pipeline de transformations :
+                <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);">
+                    log · PowerTransform · StandardScaler
+                </span>
+            </p>
+            <p style="margin-bottom: 0.75rem;">
+                Les variables catégorielles (marque, modèle, énergie, carburant) sont encodées via
+                <strong style="color: var(--text-primary);">OneHotEncoder</strong>.
+            </p>
+            <p>
+                L'intervalle de confiance à 95% est calculé à partir de l'écart-type résiduel du modèle sur le jeu de test.
+            </p>
+        </div>
+
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+            <div style="font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Liens utiles
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="/docs" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; transition: background 0.2s;"
+                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">Swagger UI →</a>
+                <a href="/redoc" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; transition: background 0.2s;"
+                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">ReDoc →</a>
+                <a href="/model/info" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; transition: background 0.2s;"
+                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">Model Info →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Result Panel ===== -->
+    <div class="card full-width">
+        <div class="card-title">Résultat</div>
+
+        <div class="result-empty" id="result-empty">
+            <div class="icon">&#9881;</div>
+            <div>Remplissez le formulaire et lancez une estimation.</div>
+        </div>
+
+        <div class="result-content" id="result-content">
+            <div class="price-display">
+                <div class="price-label">Prix de reprise estimé</div>
+                <div class="price-value">
+                    <span id="price-amount">—</span><span class="currency">€</span>
+                </div>
+            </div>
+
+            <div class="confidence-bar">
+                <div class="confidence-label">Intervalle de confiance à 95%</div>
+                <div class="confidence-track">
+                    <div class="confidence-fill" id="confidence-fill"></div>
+                </div>
+                <div class="confidence-values">
+                    <span id="ic-low">—</span>
+                    <span id="ic-high">—</span>
+                </div>
+            </div>
+
+            <div class="vehicle-summary" id="vehicle-summary"></div>
+        </div>
+    </div>
+
+    <!-- ===== CSV Import/Export ===== -->
+    <div class="card full-width">
+        <div class="card-title orange">Import CSV — Prédiction par lot</div>
+
+        <div class="csv-zone" id="csv-zone">
+            <input type="file" id="csv-input" accept=".csv">
+            <div class="icon">&#128196;</div>
+            <div class="label">Glissez un fichier CSV ici ou cliquez pour parcourir</div>
+            <div class="sublabel">Format : .csv avec séparateur virgule (,)</div>
+        </div>
+
+        <div class="csv-status" id="csv-status"></div>
+
+        <div id="csv-results"></div>
+
+        <div class="csv-format">
+            <details>
+                <summary>Format CSV attendu</summary>
+                <div class="csv-format-content">
+                    Le fichier CSV doit contenir les 7 colonnes suivantes (séparateur : virgule) :
+                    <code>Kilometrage,Annee_Facture,Annee_veh,Marque_veh,Modele_veh,Type_Energie,Carburant
+52335,2024,2020,CITROEN,C5 AIRCROSS,Thermique,Diesel
+9932,2020,2017,PEUGEOT,108 I Ph1,Thermique,Essence
+120000,2023,2018,RENAULT,CLIO V,Thermique,Essence</code>
+                    Les colonnes supplémentaires sont conservées dans l'export mais ignorées par le modèle.
+                    L'export ajoute 3 colonnes : <strong style="color: var(--text-primary);">Prix_Predit</strong>,
+                    <strong style="color: var(--text-primary);">IC_95_Bas</strong>,
+                    <strong style="color: var(--text-primary);">IC_95_Haut</strong>,
+                    et une colonne <strong style="color: var(--text-primary);">Erreur</strong> en cas de problème sur une ligne.
+                </div>
+            </details>
+        </div>
+    </div>
+</main>
+
+<footer>
+    MLPVehiclePrice — Projet UCO B2 S4 — Axel Bouchaud-Roche
+    <br>
+    API : <a href="/docs">/docs</a> &nbsp;|&nbsp; Endpoint : <a href="/predict/full">POST /predict/full</a> &nbsp;|&nbsp; Batch : <a href="/docs#/default/predict_csv_predict_csv_post">POST /predict/csv</a>
+</footer>
+
+<script>
+    const API_BASE = window.location.origin;
+
+    // ============================================================
+    //  Chargement dynamique des options (marques, energies, etc.)
+    // ============================================================
+    async function loadModelInfo() {
+        try {
+            const res = await fetch(`${API_BASE}/model/info`);
+            if (!res.ok) throw new Error('Endpoint /model/info indisponible');
+            const info = await res.json();
+            populateSelect('marque', info.marques_disponibles);
+            populateSelect('energie', info.energies_disponibles);
+            populateSelect('carburant', info.carburants_disponibles);
+        } catch (e) {
+            console.warn('Impossible de charger /model/info, valeurs par defaut.', e);
+            populateSelect('marque', ['CITROEN', 'PEUGEOT', 'RENAULT', 'VOLKSWAGEN', 'BMW', 'AUDI', 'MERCEDES', 'TOYOTA', 'FORD', 'OPEL']);
+            populateSelect('energie', ['Thermique', 'Hybride', 'Electrique']);
+            populateSelect('carburant', ['Essence', 'Diesel', 'Electrique', 'Hybride Essence', 'Hybride Diesel']);
+        }
+    }
+
+    function populateSelect(id, values) {
+        const select = document.getElementById(id);
+        const current = select.value;
+        const placeholder = select.querySelector('option[disabled]');
+        select.innerHTML = '';
+        if (placeholder) select.appendChild(placeholder);
+        values.sort().forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            opt.textContent = v;
+            select.appendChild(opt);
+        });
+        if (current) select.value = current;
+    }
+
+    // ============================================================
+    //  Prediction unitaire
+    // ============================================================
+    document.getElementById('predict-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn-predict');
+        const errorEl = document.getElementById('error-msg');
+        errorEl.classList.remove('visible');
+
+        const payload = {
+            Kilometrage: parseFloat(document.getElementById('km').value),
+            Annee_Facture: parseFloat(document.getElementById('annee_facture').value),
+            Annee_veh: parseFloat(document.getElementById('annee_veh').value),
+            Marque_veh: document.getElementById('marque').value,
+            Modele_veh: document.getElementById('modele').value.trim(),
+            Type_Energie: document.getElementById('energie').value,
+            Carburant: document.getElementById('carburant').value,
+        };
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>Estimation en cours…';
+
+        try {
+            const res = await fetch(`${API_BASE}/predict/full`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || `Erreur ${res.status}`);
+            }
+            const data = await res.json();
+            showResult(data, payload);
+        } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.add('visible');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Estimer le prix';
+        }
+    });
+
+    function showResult(data, payload) {
+        document.getElementById('result-empty').style.display = 'none';
+        const content = document.getElementById('result-content');
+        content.classList.add('visible', 'fade-up');
+
+        const price = data.predicted_price;
+        const icLow = Math.max(0, data['ic_0.95'][0]);
+        const icHigh = data['ic_0.95'][1];
+
+        document.getElementById('price-amount').textContent = formatPrice(price);
+        document.getElementById('ic-low').textContent = formatPrice(icLow) + ' €';
+        document.getElementById('ic-high').textContent = formatPrice(icHigh) + ' €';
+
+        const maxRange = icHigh * 1.15;
+        const leftPct = (icLow / maxRange) * 100;
+        const widthPct = ((icHigh - icLow) / maxRange) * 100;
+        const fill = document.getElementById('confidence-fill');
+        fill.style.left = leftPct + '%';
+        fill.style.width = widthPct + '%';
+
+        const summary = document.getElementById('vehicle-summary');
+        summary.innerHTML = [
+            { label: 'Marque', value: payload.Marque_veh },
+            { label: 'Modèle', value: payload.Modele_veh },
+            { label: 'Année', value: payload.Annee_veh },
+            { label: 'Km', value: payload.Kilometrage.toLocaleString('fr-FR') },
+            { label: 'Énergie', value: payload.Type_Energie },
+            { label: 'Carburant', value: payload.Carburant },
+        ].map(item => `
+            <div class="summary-item">
+                <div class="label">${item.label}</div>
+                <div class="value">${item.value}</div>
+            </div>
+        `).join('');
+    }
+
+    function formatPrice(n) {
+        return Math.round(n).toLocaleString('fr-FR');
+    }
+
+    // ============================================================
+    //  CSV Import / Export
+    // ============================================================
+    const csvZone = document.getElementById('csv-zone');
+    const csvInput = document.getElementById('csv-input');
+    const csvStatus = document.getElementById('csv-status');
+    const csvResults = document.getElementById('csv-results');
+
+    // Drag and drop visual feedback
+    csvZone.addEventListener('dragover', (e) => { e.preventDefault(); csvZone.classList.add('dragover'); });
+    csvZone.addEventListener('dragleave', () => { csvZone.classList.remove('dragover'); });
+    csvZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        csvZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.csv')) handleCSV(file);
+        else showCSVStatus('Veuillez fournir un fichier .csv', 'error');
+    });
+
+    csvInput.addEventListener('change', () => {
+        if (csvInput.files[0]) handleCSV(csvInput.files[0]);
+    });
+
+    // Variable globale pour stocker le blob CSV retourné par l'API
+    let lastCSVBlob = null;
+
+    async function handleCSV(file) {
+        showCSVStatus(`Envoi de ${file.name} (${(file.size / 1024).toFixed(1)} Ko)…`, '');
+        csvResults.innerHTML = '';
+        lastCSVBlob = null;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(`${API_BASE}/predict/csv`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || `Erreur ${res.status}`);
+            }
+
+            // L'API retourne un CSV
+            const blob = await res.blob();
+            lastCSVBlob = blob;
+            const text = await blob.text();
+
+            // Parser le CSV pour l'afficher
+            const rows = parseCSVText(text);
+            if (rows.length <= 1) {
+                showCSVStatus('Le CSV retourné est vide.', 'error');
+                return;
+            }
+
+            const successCount = rows.slice(1).filter(r => r[rows[0].indexOf('Prix_Predit')] !== '').length;
+            const errorCount = rows.length - 1 - successCount;
+
+            showCSVStatus(
+                `${successCount} prédiction(s) réussie(s)` + (errorCount > 0 ? `, ${errorCount} erreur(s)` : ''),
+                errorCount > 0 ? '' : 'success'
+            );
+
+            renderCSVTable(rows);
+
+        } catch (err) {
+            showCSVStatus(err.message, 'error');
+        }
+    }
+
+    function showCSVStatus(msg, type) {
+        csvStatus.textContent = msg;
+        csvStatus.className = 'csv-status visible' + (type ? ' ' + type : '');
+    }
+
+    function parseCSVText(text) {
+        const lines = text.trim().split('\n');
+        return lines.map(line => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (ch === '"') { inQuotes = !inQuotes; }
+                else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+                else { current += ch; }
+            }
+            result.push(current.trim());
+            return result;
+        });
+    }
+
+    function renderCSVTable(rows) {
+        const headers = rows[0];
+        const data = rows.slice(1);
+        const priceIdx = headers.indexOf('Prix_Predit');
+        const errIdx = headers.indexOf('Erreur');
+
+        let html = '<div class="csv-table-wrapper"><table><thead><tr>';
+        headers.forEach(h => { html += `<th>${h}</th>`; });
+        html += '</tr></thead><tbody>';
+
+        data.forEach(row => {
+            html += '<tr>';
+            row.forEach((cell, i) => {
+                let cls = '';
+                if (i === priceIdx && cell !== '') cls = ' class="price"';
+                else if (i === errIdx && cell !== '') cls = ' class="error-cell"';
+                html += `<td${cls}>${cell}</td>`;
+            });
+            html += '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        html += '<button class="btn-export" onclick="exportCSV()">Exporter les résultats (.csv)</button>';
+
+        csvResults.innerHTML = html;
+    }
+
+    function exportCSV() {
+        if (!lastCSVBlob) return;
+        const url = URL.createObjectURL(lastCSVBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'predictions_vehicules.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    //  Init
+    // ============================================================
+    loadModelInfo();
+</script>
+</body>
+</html>
