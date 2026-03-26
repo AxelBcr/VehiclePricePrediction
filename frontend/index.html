@@ -23,6 +23,7 @@
             --orange: #f59e0b;
             --orange-glow: rgba(245, 158, 11, 0.1);
             --danger: #ef4444;
+            --purple: #a855f7;
             --radius: 10px;
             --font-body: 'DM Sans', sans-serif;
             --font-mono: 'Space Mono', monospace;
@@ -51,416 +52,164 @@
         }
 
         header {
-            position: relative;
-            z-index: 1;
-            padding: 2.5rem 2rem 1.5rem;
-            text-align: center;
+            position: relative; z-index: 1;
+            padding: 2.5rem 2rem 1.5rem; text-align: center;
             border-bottom: 1px solid var(--border);
             background: linear-gradient(180deg, rgba(59,130,246,0.04) 0%, transparent 100%);
         }
-
         header .badge {
-            display: inline-block;
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--accent);
-            background: var(--accent-glow);
-            border: 1px solid rgba(59,130,246,0.2);
-            padding: 0.3rem 0.9rem;
-            border-radius: 20px;
-            margin-bottom: 1rem;
+            display: inline-block; font-family: var(--font-mono); font-size: 0.65rem;
+            letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent);
+            background: var(--accent-glow); border: 1px solid rgba(59,130,246,0.2);
+            padding: 0.3rem 0.9rem; border-radius: 20px; margin-bottom: 1rem;
         }
-
         header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
         header h1 span { color: var(--accent); }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            max-width: 480px;
-            margin: 0 auto;
-            line-height: 1.5;
-        }
+        header p { color: var(--text-secondary); font-size: 0.9rem; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
         main {
-            position: relative;
-            z-index: 1;
-            max-width: 920px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            position: relative; z-index: 1; max-width: 920px; margin: 2rem auto; padding: 0 1.5rem;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
         }
-
         @media (max-width: 720px) { main { grid-template-columns: 1fr; } }
 
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1.75rem;
-        }
-
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; }
         .card-title {
-            font-size: 0.7rem;
-            font-family: var(--font-mono);
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: var(--text-muted);
-            margin-bottom: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase;
+            letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 1.25rem;
+            display: flex; align-items: center; gap: 0.5rem;
         }
-
-        .card-title::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 2px;
-            background: var(--accent);
-        }
-
+        .card-title::before { content: ''; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
         .card-title.orange::before { background: var(--orange); }
+        .card-title.purple::before { background: var(--purple); }
 
         .form-group { margin-bottom: 1rem; }
-
-        .form-group label {
-            display: block;
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.35rem;
+        .form-group label { display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.35rem; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.6rem 0.75rem; font-family: var(--font-body); font-size: 0.88rem;
+            color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 6px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
         }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 0.6rem 0.75rem;
-            font-family: var(--font-body);
-            font-size: 0.88rem;
-            color: var(--text-primary);
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            -webkit-appearance: none;
-        }
-
         .form-group select {
             cursor: pointer;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b92a5' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            padding-right: 2rem;
+            background-repeat: no-repeat; background-position: right 0.75rem center; padding-right: 2rem;
         }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
+        .form-group input:focus, .form-group select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-glow); }
         .form-group input::placeholder { color: var(--text-muted); }
-
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
         .btn-predict {
-            width: 100%;
-            padding: 0.75rem;
-            margin-top: 0.5rem;
-            font-family: var(--font-body);
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #fff;
-            background: var(--accent);
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            width: 100%; padding: 0.75rem; margin-top: 0.5rem; font-family: var(--font-body);
+            font-size: 0.9rem; font-weight: 700; color: #fff; background: var(--accent);
+            border: none; border-radius: 6px; cursor: pointer;
             transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
         }
-
         .btn-predict:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(59,130,246,0.3); }
         .btn-predict:active:not(:disabled) { transform: translateY(0); }
         .btn-predict:disabled { opacity: 0.5; cursor: wait; }
 
         .full-width { grid-column: 1 / -1; }
 
-        .result-empty {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
+        .result-empty { text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.85rem; }
         .result-empty .icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.3; }
-
         .result-content { display: none; }
         .result-content.visible { display: block; }
-
         .price-display { text-align: center; padding: 2rem 1rem 1.5rem; }
-
-        .price-label {
-            font-size: 0.75rem;
-            font-family: var(--font-mono);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .price-value {
-            font-family: var(--font-mono);
-            font-size: 2.8rem;
-            font-weight: 700;
-            color: var(--success);
-            text-shadow: 0 0 40px var(--success-glow);
-            line-height: 1.1;
-        }
-
+        .price-label { font-size: 0.75rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .price-value { font-family: var(--font-mono); font-size: 2.8rem; font-weight: 700; color: var(--success); text-shadow: 0 0 40px var(--success-glow); line-height: 1.1; }
         .price-value .currency { font-size: 1.6rem; color: var(--text-secondary); margin-left: 0.15em; }
 
         .confidence-bar { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+        .confidence-label { font-size: 0.7rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; text-align: center; }
+        .confidence-range { display: flex; align-items: center; gap: 1rem; max-width: 520px; margin: 0.75rem auto 0; }
+        .confidence-track { flex: 1; position: relative; height: 2px; background: linear-gradient(90deg, var(--orange), var(--success)); border-radius: 2px; }
+        .confidence-track::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border-radius: 50%; background: var(--text-primary); border: 2px solid var(--bg-card); }
+        .confidence-fill { display: none; }
+        .ic-bound { font-family: var(--font-mono); font-size: 1rem; font-weight: 600; white-space: nowrap; }
+        .ic-bound-low { color: var(--orange); }
+        .ic-bound-high { color: var(--success); }
+        .confidence-pct { text-align: center; font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); margin-top: 0.4rem; letter-spacing: 0.05em; }
+        .confidence-values { display: none; }
 
-        .confidence-label {
-            font-size: 0.7rem;
-            font-family: var(--font-mono);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            margin-bottom: 0.75rem;
-            text-align: center;
-        }
-
-        .confidence-track { position: relative; height: 6px; background: var(--bg-input); border-radius: 3px; margin: 0 auto; max-width: 400px; }
-
-        .confidence-fill {
-            position: absolute;
-            height: 100%;
-            background: linear-gradient(90deg, var(--orange), var(--success));
-            border-radius: 3px;
-            transition: left 0.6s ease, width 0.6s ease;
-        }
-
-        .confidence-values {
-            display: flex;
-            justify-content: space-between;
-            max-width: 400px;
-            margin: 0.5rem auto 0;
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-        }
-
-        .vehicle-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-            padding-top: 1.25rem;
-            border-top: 1px solid var(--border);
-        }
-
+        .vehicle-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
         .summary-item { text-align: center; }
         .summary-item .label { font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.2rem; }
         .summary-item .value { font-size: 0.82rem; font-weight: 500; color: var(--text-secondary); }
 
-        .error-msg {
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-            padding: 0.75rem 1rem;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            margin-top: 1rem;
-            display: none;
-        }
-
+        .error-msg { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: var(--danger); padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.82rem; margin-top: 1rem; display: none; }
         .error-msg.visible { display: block; }
 
         /* --- CSV Section --- */
-        .csv-zone {
-            border: 2px dashed var(--border);
-            border-radius: 8px;
-            padding: 2rem 1.5rem;
-            text-align: center;
-            transition: border-color 0.2s, background 0.2s;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .csv-zone:hover, .csv-zone.dragover {
-            border-color: var(--accent);
-            background: var(--accent-glow);
-        }
-
-        .csv-zone input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
+        .csv-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2rem 1.5rem; text-align: center; transition: border-color 0.2s, background 0.2s; cursor: pointer; position: relative; }
+        .csv-zone:hover, .csv-zone.dragover { border-color: var(--accent); background: var(--accent-glow); }
+        .csv-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
         .csv-zone .icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4; }
-
-        .csv-zone .label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.25rem;
-        }
-
-        .csv-zone .sublabel {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-        }
-
-        .csv-status {
-            margin-top: 1rem;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            display: none;
-        }
-
+        .csv-zone .label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem; }
+        .csv-zone .sublabel { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+        .csv-status { margin-top: 1rem; font-size: 0.82rem; color: var(--text-secondary); display: none; }
         .csv-status.visible { display: block; }
-
         .csv-status.error { color: var(--danger); }
         .csv-status.success { color: var(--success); }
-
-        .csv-format {
-            margin-top: 1.25rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .csv-format summary {
-            font-size: 0.75rem;
-            font-family: var(--font-mono);
-            color: var(--text-muted);
-            cursor: pointer;
-            user-select: none;
-            letter-spacing: 0.05em;
-        }
-
+        .csv-format { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .csv-format summary { font-size: 0.75rem; font-family: var(--font-mono); color: var(--text-muted); cursor: pointer; user-select: none; letter-spacing: 0.05em; }
         .csv-format summary:hover { color: var(--text-secondary); }
-
-        .csv-format-content {
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        .csv-format-content code {
-            display: block;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 0.6rem 0.75rem;
-            margin: 0.5rem 0;
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            color: var(--accent);
-            overflow-x: auto;
-            white-space: pre;
-        }
-
-        .csv-table-wrapper {
-            margin-top: 1rem;
-            overflow-x: auto;
-            max-height: 320px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-        }
-
-        .csv-table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.72rem;
-            font-family: var(--font-mono);
-        }
-
-        .csv-table-wrapper th {
-            position: sticky;
-            top: 0;
-            background: var(--bg-input);
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            font-weight: 500;
-            padding: 0.5rem 0.6rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .csv-table-wrapper td {
-            padding: 0.4rem 0.6rem;
-            border-bottom: 1px solid rgba(37,42,54,0.5);
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
-
+        .csv-format-content { margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6; }
+        .csv-table-wrapper { margin-top: 1rem; overflow-x: auto; max-height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+        .csv-table-wrapper table { width: 100%; border-collapse: collapse; font-size: 0.72rem; font-family: var(--font-mono); }
+        .csv-table-wrapper th { position: sticky; top: 0; background: var(--bg-input); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; padding: 0.5rem 0.6rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .csv-table-wrapper td { padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(37,42,54,0.5); color: var(--text-secondary); white-space: nowrap; }
         .csv-table-wrapper tr:hover td { background: rgba(59,130,246,0.04); }
-
         .csv-table-wrapper td.price { color: var(--success); font-weight: 700; }
         .csv-table-wrapper td.error-cell { color: var(--danger); }
-
-        .btn-export {
-            display: inline-block;
-            margin-top: 1rem;
-            padding: 0.55rem 1.2rem;
-            font-family: var(--font-body);
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #fff;
-            background: var(--success);
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.2s;
-            text-decoration: none;
-        }
-
+        .btn-export { display: inline-block; margin-top: 1rem; padding: 0.55rem 1.2rem; font-family: var(--font-body); font-size: 0.82rem; font-weight: 600; color: #fff; background: var(--success); border: none; border-radius: 6px; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; text-decoration: none; }
         .btn-export:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(34,197,94,0.3); }
 
-        footer {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            padding: 2rem 1rem;
-            color: var(--text-muted);
-            font-size: 0.72rem;
-            font-family: var(--font-mono);
-            border-top: 1px solid var(--border);
-            margin-top: 2rem;
+        /* --- API Doc Section --- */
+        .api-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; }
+        .api-tab {
+            padding: 0.5rem 1rem; font-family: var(--font-mono); font-size: 0.72rem;
+            letter-spacing: 0.05em; color: var(--text-muted); cursor: pointer;
+            border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s;
+            user-select: none;
         }
+        .api-tab:hover { color: var(--text-secondary); }
+        .api-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .api-panel { display: none; }
+        .api-panel.active { display: block; }
+        .api-section-title { font-size: 0.72rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin: 1rem 0 0.5rem; }
+        .api-section-title:first-child { margin-top: 0; }
+        .api-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0.75rem; }
+        .api-method { display: inline-block; font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 3px; margin-right: 0.4rem; }
+        .api-method.post { background: rgba(59,130,246,0.15); color: var(--accent); }
+        .api-method.get { background: rgba(34,197,94,0.15); color: var(--success); }
+        .api-endpoint { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-primary); }
 
+        pre.code-block {
+            background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.75rem 1rem; margin: 0.5rem 0 1rem; overflow-x: auto;
+            font-family: var(--font-mono); font-size: 0.7rem; line-height: 1.65; color: var(--text-secondary);
+        }
+        pre.code-block .kw { color: var(--accent); }
+        pre.code-block .str { color: var(--success); }
+        pre.code-block .num { color: var(--orange); }
+        pre.code-block .cmt { color: var(--text-muted); font-style: italic; }
+
+        .json-format-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; font-family: var(--font-mono); margin: 0.5rem 0 1rem; }
+        .json-format-table th { text-align: left; padding: 0.4rem 0.6rem; color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .json-format-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(37,42,54,0.5); color: var(--text-secondary); }
+        .json-format-table td:first-child { color: var(--accent); }
+
+        footer {
+            position: relative; z-index: 1; text-align: center; padding: 2rem 1rem;
+            color: var(--text-muted); font-size: 0.72rem; font-family: var(--font-mono);
+            border-top: 1px solid var(--border); margin-top: 2rem;
+        }
         footer a { color: var(--accent); text-decoration: none; }
 
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            vertical-align: middle;
-            margin-right: 0.4rem;
-        }
-
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 0.4rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .fade-up { animation: fadeUp 0.5s ease forwards; }
     </style>
 </head>
@@ -480,16 +229,13 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="marque">Marque</label>
-                    <select id="marque" required>
-                        <option value="" disabled selected>Sélectionner…</option>
-                    </select>
+                    <select id="marque" required><option value="" disabled selected>Sélectionner…</option></select>
                 </div>
                 <div class="form-group">
                     <label for="modele">Modèle</label>
                     <input type="text" id="modele" placeholder="Ex: C5 AIRCROSS" required>
                 </div>
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label for="annee_veh">Année du véhicule</label>
@@ -500,31 +246,21 @@
                     <input type="number" id="annee_facture" placeholder="Ex: 2024" min="2000" max="2026" step="1" required>
                 </div>
             </div>
-
             <div class="form-group">
                 <label for="km">Kilométrage</label>
                 <input type="number" id="km" placeholder="Ex: 52335" min="0" step="1" required>
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label for="energie">Type d'énergie</label>
-                    <select id="energie" required>
-                        <option value="" disabled selected>Sélectionner…</option>
-                    </select>
+                    <select id="energie" required><option value="" disabled selected>Sélectionner…</option></select>
                 </div>
                 <div class="form-group">
                     <label for="carburant">Carburant</label>
-                    <select id="carburant" required>
-                        <option value="" disabled selected>Sélectionner…</option>
-                    </select>
+                    <select id="carburant" required><option value="" disabled selected>Sélectionner…</option></select>
                 </div>
             </div>
-
-            <button type="submit" class="btn-predict" id="btn-predict">
-                Estimer le prix
-            </button>
-
+            <button type="submit" class="btn-predict" id="btn-predict">Estimer le prix</button>
             <div class="error-msg" id="error-msg"></div>
         </form>
     </div>
@@ -539,30 +275,19 @@
             </p>
             <p style="margin-bottom: 0.75rem;">
                 Les features numériques subissent un pipeline de transformations :
-                <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);">
-                    log · PowerTransform · StandardScaler
-                </span>
+                <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);">log · PowerTransform · StandardScaler</span>
             </p>
             <p style="margin-bottom: 0.75rem;">
-                Les variables catégorielles (marque, modèle, énergie, carburant) sont encodées via
-                <strong style="color: var(--text-primary);">OneHotEncoder</strong>.
+                Les variables catégorielles (marque, modèle, énergie, carburant) sont encodées via <strong style="color: var(--text-primary);">OneHotEncoder</strong>.
             </p>
-            <p>
-                L'intervalle de confiance à 95% est calculé à partir de l'écart-type résiduel du modèle sur le jeu de test.
-            </p>
+            <p>L'intervalle de confiance à 95% est calculé à partir de l'écart-type résiduel du modèle sur le jeu de test.</p>
         </div>
-
         <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
-            <div style="font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem;">
-                Liens utiles
-            </div>
+            <div style="font-size: 0.65rem; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem;">Liens utiles</div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <a href="/docs" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; transition: background 0.2s;"
-                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">Swagger UI →</a>
-                <a href="/redoc" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; transition: background 0.2s;"
-                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">ReDoc →</a>
-                <a href="/model/info" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px; transition: background 0.2s;"
-                   onmouseover="this.style.background='var(--accent-glow)'" onmouseout="this.style.background='transparent'">Model Info →</a>
+                <a href="/docs" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px;">Swagger UI →</a>
+                <a href="/redoc" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px;">ReDoc →</a>
+                <a href="/model/info" target="_blank" style="font-size: 0.78rem; color: var(--accent); text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid rgba(59,130,246,0.2); border-radius: 4px;">Model Info →</a>
             </div>
         </div>
     </div>
@@ -570,64 +295,177 @@
     <!-- ===== Result Panel ===== -->
     <div class="card full-width">
         <div class="card-title">Résultat</div>
-
         <div class="result-empty" id="result-empty">
             <div class="icon">&#9881;</div>
             <div>Remplissez le formulaire et lancez une estimation.</div>
         </div>
-
         <div class="result-content" id="result-content">
             <div class="price-display">
                 <div class="price-label">Prix de reprise estimé</div>
-                <div class="price-value">
-                    <span id="price-amount">—</span><span class="currency">€</span>
-                </div>
+                <div class="price-value"><span id="price-amount">—</span><span class="currency">€</span></div>
             </div>
-
             <div class="confidence-bar">
                 <div class="confidence-label">Intervalle de confiance à 95%</div>
-                <div class="confidence-track">
-                    <div class="confidence-fill" id="confidence-fill"></div>
+                <div class="confidence-range">
+                    <span id="ic-low" class="ic-bound ic-bound-low">—</span>
+                    <div class="confidence-track"><div class="confidence-fill" id="confidence-fill"></div></div>
+                    <span id="ic-high" class="ic-bound ic-bound-high">—</span>
                 </div>
-                <div class="confidence-values">
-                    <span id="ic-low">—</span>
-                    <span id="ic-high">—</span>
-                </div>
+                <div class="confidence-pct" id="confidence-pct"></div>
             </div>
-
             <div class="vehicle-summary" id="vehicle-summary"></div>
+        </div>
+    </div>
+
+    <!-- ===== API Documentation ===== -->
+    <div class="card full-width">
+        <div class="card-title purple">Appeler l'API — Documentation</div>
+
+        <p class="api-desc">
+            L'API expose un endpoint REST pour obtenir une estimation par requête JSON.
+            Ci-dessous le format attendu, la réponse retournée, et des exemples prêts à l'emploi pour chaque langage.
+        </p>
+
+        <!-- Endpoint -->
+        <div class="api-section-title">Endpoint</div>
+        <p style="margin-bottom: 0.75rem;">
+            <span class="api-method post">POST</span>
+            <span class="api-endpoint">/predict/full</span>
+        </p>
+
+        <!-- JSON Format -->
+        <div class="api-section-title">Format de la requête (JSON)</div>
+        <table class="json-format-table">
+            <thead><tr><th>Champ</th><th>Type</th><th>Description</th><th>Exemple</th></tr></thead>
+            <tbody>
+                <tr><td>Kilometrage</td><td>float</td><td>Kilométrage exact</td><td>52335</td></tr>
+                <tr><td>Annee_Facture</td><td>float</td><td>Année de la facture</td><td>2024</td></tr>
+                <tr><td>Annee_veh</td><td>float</td><td>Année 1ère immatriculation</td><td>2020</td></tr>
+                <tr><td>Marque_veh</td><td>string</td><td>Marque du véhicule</td><td>"CITROEN"</td></tr>
+                <tr><td>Modele_veh</td><td>string</td><td>Modèle du véhicule</td><td>"C5 AIRCROSS"</td></tr>
+                <tr><td>Type_Energie</td><td>string</td><td>Thermique / Hybride / Electrique</td><td>"Thermique"</td></tr>
+                <tr><td>Carburant</td><td>string</td><td>Essence / Diesel / Electrique / …</td><td>"Diesel"</td></tr>
+            </tbody>
+        </table>
+
+        <div class="api-section-title">Format de la réponse</div>
+        <pre class="code-block">{
+  <span class="str">"predicted_price"</span>: <span class="num">18542.37</span>,
+  <span class="str">"ic_0.95"</span>: [<span class="num">13686.85</span>, <span class="num">23397.89</span>]
+}</pre>
+
+        <!-- Tabbed Code Examples -->
+        <div class="api-section-title">Exemples de code</div>
+
+        <div class="api-tabs">
+            <div class="api-tab active" data-tab="python">Python</div>
+            <div class="api-tab" data-tab="javascript">JavaScript</div>
+            <div class="api-tab" data-tab="curl">cURL</div>
+        </div>
+
+        <!-- Python -->
+        <div class="api-panel active" id="panel-python">
+            <p class="api-desc">
+                Librairie : <strong style="color: var(--text-primary);">requests</strong>
+                — installer avec <code style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent);">pip install requests</code>
+            </p>
+<pre class="code-block"><span class="kw">import</span> requests
+
+url = <span class="str">"http://localhost:8001/predict/full"</span>
+
+payload = {
+    <span class="str">"Kilometrage"</span>: <span class="num">52335</span>,
+    <span class="str">"Annee_Facture"</span>: <span class="num">2024</span>,
+    <span class="str">"Annee_veh"</span>: <span class="num">2020</span>,
+    <span class="str">"Marque_veh"</span>: <span class="str">"CITROEN"</span>,
+    <span class="str">"Modele_veh"</span>: <span class="str">"C5 AIRCROSS"</span>,
+    <span class="str">"Type_Energie"</span>: <span class="str">"Thermique"</span>,
+    <span class="str">"Carburant"</span>: <span class="str">"Diesel"</span>
+}
+
+response = requests.post(url, json=payload)
+data = response.json()
+
+<span class="kw">print</span>(<span class="str">f"Prix estimé : <span class="kw">{data['predicted_price']:.2f}</span> €"</span>)
+<span class="kw">print</span>(<span class="str">f"IC 95% : [<span class="kw">{data['ic_0.95'][0]:.2f}</span>, <span class="kw">{data['ic_0.95'][1]:.2f}</span>]"</span>)</pre>
+        </div>
+
+        <!-- JavaScript -->
+        <div class="api-panel" id="panel-javascript">
+            <p class="api-desc">
+                API native : <strong style="color: var(--text-primary);">fetch</strong> — aucune dépendance nécessaire (navigateur ou Node 18+)
+            </p>
+<pre class="code-block"><span class="kw">const</span> response = <span class="kw">await</span> fetch(<span class="str">"http://localhost:8001/predict/full"</span>, {
+    method: <span class="str">"POST"</span>,
+    headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },
+    body: JSON.stringify({
+        Kilometrage: <span class="num">52335</span>,
+        Annee_Facture: <span class="num">2024</span>,
+        Annee_veh: <span class="num">2020</span>,
+        Marque_veh: <span class="str">"CITROEN"</span>,
+        Modele_veh: <span class="str">"C5 AIRCROSS"</span>,
+        Type_Energie: <span class="str">"Thermique"</span>,
+        Carburant: <span class="str">"Diesel"</span>
+    })
+});
+
+<span class="kw">const</span> data = <span class="kw">await</span> response.json();
+console.log(<span class="str">"Prix estimé :"</span>, data.predicted_price);
+console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95"</span>]);</pre>
+        </div>
+
+        <!-- cURL -->
+        <div class="api-panel" id="panel-curl">
+            <p class="api-desc">
+                Outil en ligne de commande — disponible nativement sur Linux/macOS, ou via Git Bash / WSL sur Windows.
+            </p>
+<pre class="code-block">curl -X POST http://localhost:8001/predict/full \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "Kilometrage": 52335,
+    "Annee_Facture": 2024,
+    "Annee_veh": 2020,
+    "Marque_veh": "CITROEN",
+    "Modele_veh": "C5 AIRCROSS",
+    "Type_Energie": "Thermique",
+    "Carburant": "Diesel"
+  }'</span></pre>
+        </div>
+
+        <!-- Other endpoints -->
+        <div class="api-section-title" style="margin-top: 1.5rem;">Autres endpoints</div>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+            <p><span class="api-method post">POST</span><span class="api-endpoint">/predict/batch</span> — Prédiction de plusieurs véhicules en JSON (tableau <code style="font-family:var(--font-mono);font-size:0.72rem;color:var(--accent);">vehicles</code>)</p>
+            <p><span class="api-method post">POST</span><span class="api-endpoint">/predict/csv</span> — Upload d'un fichier CSV, retourne un CSV enrichi avec les prédictions</p>
+            <p><span class="api-method get">GET</span><span class="api-endpoint">/model/info</span> — Métadonnées du modèle (marques, énergies, carburants disponibles)</p>
         </div>
     </div>
 
     <!-- ===== CSV Import/Export ===== -->
     <div class="card full-width">
         <div class="card-title orange">Import CSV — Prédiction par lot</div>
-
         <div class="csv-zone" id="csv-zone">
             <input type="file" id="csv-input" accept=".csv">
             <div class="icon">&#128196;</div>
             <div class="label">Glissez un fichier CSV ici ou cliquez pour parcourir</div>
             <div class="sublabel">Format : .csv avec séparateur virgule (,)</div>
         </div>
-
         <div class="csv-status" id="csv-status"></div>
-
         <div id="csv-results"></div>
-
         <div class="csv-format">
             <details>
                 <summary>Format CSV attendu</summary>
                 <div class="csv-format-content">
                     Le fichier CSV doit contenir les 7 colonnes suivantes (séparateur : virgule) :
-                    <code>Kilometrage,Annee_Facture,Annee_veh,Marque_veh,Modele_veh,Type_Energie,Carburant
+                    <pre class="code-block" style="color: var(--accent);">Kilometrage,Annee_Facture,Annee_veh,Marque_veh,Modele_veh,Type_Energie,Carburant
 52335,2024,2020,CITROEN,C5 AIRCROSS,Thermique,Diesel
 9932,2020,2017,PEUGEOT,108 I Ph1,Thermique,Essence
-120000,2023,2018,RENAULT,CLIO V,Thermique,Essence</code>
+120000,2023,2018,RENAULT,CLIO V,Thermique,Essence</pre>
                     Les colonnes supplémentaires sont conservées dans l'export mais ignorées par le modèle.
                     L'export ajoute 3 colonnes : <strong style="color: var(--text-primary);">Prix_Predit</strong>,
                     <strong style="color: var(--text-primary);">IC_95_Bas</strong>,
                     <strong style="color: var(--text-primary);">IC_95_Haut</strong>,
-                    et une colonne <strong style="color: var(--text-primary);">Erreur</strong> en cas de problème sur une ligne.
+                    et une colonne <strong style="color: var(--text-primary);">Erreur</strong> en cas de problème.
                 </div>
             </details>
         </div>
@@ -644,7 +482,19 @@
     const API_BASE = window.location.origin;
 
     // ============================================================
-    //  Chargement dynamique des options (marques, energies, etc.)
+    //  API Doc Tabs
+    // ============================================================
+    document.querySelectorAll('.api-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.api-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ============================================================
+    //  Load model info
     // ============================================================
     async function loadModelInfo() {
         try {
@@ -656,9 +506,9 @@
             populateSelect('carburant', info.carburants_disponibles);
         } catch (e) {
             console.warn('Impossible de charger /model/info, valeurs par defaut.', e);
-            populateSelect('marque', ['CITROEN', 'PEUGEOT', 'RENAULT', 'VOLKSWAGEN', 'BMW', 'AUDI', 'MERCEDES', 'TOYOTA', 'FORD', 'OPEL']);
-            populateSelect('energie', ['Thermique', 'Hybride', 'Electrique']);
-            populateSelect('carburant', ['Essence', 'Diesel', 'Electrique', 'Hybride Essence', 'Hybride Diesel']);
+            populateSelect('marque', ['CITROEN','PEUGEOT','RENAULT','VOLKSWAGEN','BMW','AUDI','MERCEDES','TOYOTA','FORD','OPEL']);
+            populateSelect('energie', ['Thermique','Hybride','Electrique']);
+            populateSelect('carburant', ['Essence','Diesel','Electrique','Hybride Essence','Hybride Diesel']);
         }
     }
 
@@ -670,15 +520,14 @@
         if (placeholder) select.appendChild(placeholder);
         values.sort().forEach(v => {
             const opt = document.createElement('option');
-            opt.value = v;
-            opt.textContent = v;
+            opt.value = v; opt.textContent = v;
             select.appendChild(opt);
         });
         if (current) select.value = current;
     }
 
     // ============================================================
-    //  Prediction unitaire
+    //  Single prediction
     // ============================================================
     document.getElementById('predict-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -700,15 +549,8 @@
         btn.innerHTML = '<span class="spinner"></span>Estimation en cours…';
 
         try {
-            const res = await fetch(`${API_BASE}/predict/full`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || `Erreur ${res.status}`);
-            }
+            const res = await fetch(`${API_BASE}/predict/full`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!res.ok) { const err = await res.json(); throw new Error(err.detail || `Erreur ${res.status}`); }
             const data = await res.json();
             showResult(data, payload);
         } catch (err) {
@@ -733,32 +575,21 @@
         document.getElementById('ic-low').textContent = formatPrice(icLow) + ' €';
         document.getElementById('ic-high').textContent = formatPrice(icHigh) + ' €';
 
-        const maxRange = icHigh * 1.15;
-        const leftPct = (icLow / maxRange) * 100;
-        const widthPct = ((icHigh - icLow) / maxRange) * 100;
-        const fill = document.getElementById('confidence-fill');
-        fill.style.left = leftPct + '%';
-        fill.style.width = widthPct + '%';
+        const halfIC = icHigh - price;
+        const relUncert = ((halfIC / price) * 100).toFixed(1);
+        document.getElementById('confidence-pct').textContent = `± ${relUncert} % du prix estimé`;
 
-        const summary = document.getElementById('vehicle-summary');
-        summary.innerHTML = [
+        document.getElementById('vehicle-summary').innerHTML = [
             { label: 'Marque', value: payload.Marque_veh },
             { label: 'Modèle', value: payload.Modele_veh },
             { label: 'Année', value: payload.Annee_veh },
             { label: 'Km', value: payload.Kilometrage.toLocaleString('fr-FR') },
             { label: 'Énergie', value: payload.Type_Energie },
             { label: 'Carburant', value: payload.Carburant },
-        ].map(item => `
-            <div class="summary-item">
-                <div class="label">${item.label}</div>
-                <div class="value">${item.value}</div>
-            </div>
-        `).join('');
+        ].map(item => `<div class="summary-item"><div class="label">${item.label}</div><div class="value">${item.value}</div></div>`).join('');
     }
 
-    function formatPrice(n) {
-        return Math.round(n).toLocaleString('fr-FR');
-    }
+    function formatPrice(n) { return Math.round(n).toLocaleString('fr-FR'); }
 
     // ============================================================
     //  CSV Import / Export
@@ -767,103 +598,57 @@
     const csvInput = document.getElementById('csv-input');
     const csvStatus = document.getElementById('csv-status');
     const csvResults = document.getElementById('csv-results');
+    let lastCSVBlob = null;
 
-    // Drag and drop visual feedback
     csvZone.addEventListener('dragover', (e) => { e.preventDefault(); csvZone.classList.add('dragover'); });
     csvZone.addEventListener('dragleave', () => { csvZone.classList.remove('dragover'); });
     csvZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        csvZone.classList.remove('dragover');
+        e.preventDefault(); csvZone.classList.remove('dragover');
         const file = e.dataTransfer.files[0];
         if (file && file.name.endsWith('.csv')) handleCSV(file);
         else showCSVStatus('Veuillez fournir un fichier .csv', 'error');
     });
-
-    csvInput.addEventListener('change', () => {
-        if (csvInput.files[0]) handleCSV(csvInput.files[0]);
-    });
-
-    // Variable globale pour stocker le blob CSV retourné par l'API
-    let lastCSVBlob = null;
+    csvInput.addEventListener('change', () => { if (csvInput.files[0]) handleCSV(csvInput.files[0]); });
 
     async function handleCSV(file) {
         showCSVStatus(`Envoi de ${file.name} (${(file.size / 1024).toFixed(1)} Ko)…`, '');
-        csvResults.innerHTML = '';
-        lastCSVBlob = null;
-
-        const formData = new FormData();
-        formData.append('file', file);
-
+        csvResults.innerHTML = ''; lastCSVBlob = null;
+        const formData = new FormData(); formData.append('file', file);
         try {
-            const res = await fetch(`${API_BASE}/predict/csv`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || `Erreur ${res.status}`);
-            }
-
-            // L'API retourne un CSV
-            const blob = await res.blob();
-            lastCSVBlob = blob;
+            const res = await fetch(`${API_BASE}/predict/csv`, { method: 'POST', body: formData });
+            if (!res.ok) { const err = await res.json(); throw new Error(err.detail || `Erreur ${res.status}`); }
+            const blob = await res.blob(); lastCSVBlob = blob;
             const text = await blob.text();
-
-            // Parser le CSV pour l'afficher
             const rows = parseCSVText(text);
-            if (rows.length <= 1) {
-                showCSVStatus('Le CSV retourné est vide.', 'error');
-                return;
-            }
-
+            if (rows.length <= 1) { showCSVStatus('Le CSV retourné est vide.', 'error'); return; }
             const successCount = rows.slice(1).filter(r => r[rows[0].indexOf('Prix_Predit')] !== '').length;
             const errorCount = rows.length - 1 - successCount;
-
-            showCSVStatus(
-                `${successCount} prédiction(s) réussie(s)` + (errorCount > 0 ? `, ${errorCount} erreur(s)` : ''),
-                errorCount > 0 ? '' : 'success'
-            );
-
+            showCSVStatus(`${successCount} prédiction(s) réussie(s)` + (errorCount > 0 ? `, ${errorCount} erreur(s)` : ''), errorCount > 0 ? '' : 'success');
             renderCSVTable(rows);
-
-        } catch (err) {
-            showCSVStatus(err.message, 'error');
-        }
+        } catch (err) { showCSVStatus(err.message, 'error'); }
     }
 
-    function showCSVStatus(msg, type) {
-        csvStatus.textContent = msg;
-        csvStatus.className = 'csv-status visible' + (type ? ' ' + type : '');
-    }
+    function showCSVStatus(msg, type) { csvStatus.textContent = msg; csvStatus.className = 'csv-status visible' + (type ? ' ' + type : ''); }
 
     function parseCSVText(text) {
-        const lines = text.trim().split('\n');
-        return lines.map(line => {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
+        return text.trim().split('\n').map(line => {
+            const result = []; let current = ''; let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
                 const ch = line[i];
-                if (ch === '"') { inQuotes = !inQuotes; }
+                if (ch === '"') inQuotes = !inQuotes;
                 else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
-                else { current += ch; }
+                else current += ch;
             }
-            result.push(current.trim());
-            return result;
+            result.push(current.trim()); return result;
         });
     }
 
     function renderCSVTable(rows) {
-        const headers = rows[0];
-        const data = rows.slice(1);
-        const priceIdx = headers.indexOf('Prix_Predit');
-        const errIdx = headers.indexOf('Erreur');
-
+        const headers = rows[0]; const data = rows.slice(1);
+        const priceIdx = headers.indexOf('Prix_Predit'); const errIdx = headers.indexOf('Erreur');
         let html = '<div class="csv-table-wrapper"><table><thead><tr>';
         headers.forEach(h => { html += `<th>${h}</th>`; });
         html += '</tr></thead><tbody>';
-
         data.forEach(row => {
             html += '<tr>';
             row.forEach((cell, i) => {
@@ -874,27 +659,17 @@
             });
             html += '</tr>';
         });
-
-        html += '</tbody></table></div>';
-        html += '<button class="btn-export" onclick="exportCSV()">Exporter les résultats (.csv)</button>';
-
+        html += '</tbody></table></div><button class="btn-export" onclick="exportCSV()">Exporter les résultats (.csv)</button>';
         csvResults.innerHTML = html;
     }
 
     function exportCSV() {
         if (!lastCSVBlob) return;
         const url = URL.createObjectURL(lastCSVBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'predictions_vehicules.csv';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const a = document.createElement('a'); a.href = url; a.download = 'predictions_vehicules.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // ============================================================
-    //  Init
     // ============================================================
     loadModelInfo();
 </script>

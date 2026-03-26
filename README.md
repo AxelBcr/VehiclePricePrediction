@@ -12,13 +12,12 @@
 1. [Présentation](#présentation)
 2. [Architecture du projet](#architecture-du-projet)
 3. [Stack technique](#stack-technique)
-4. [Démarrage rapide avec Docker](#démarrage-rapide-avec-docker)
-5. [Lancer le service API](#lancer-le-service-api)
-6. [Utilisation de l'API](#utilisation-de-lapi)
-7. [Import CSV — Prédiction par lot](#import-csv--prédiction-par-lot)
-8. [Interface Web](#interface-web)
-9. [Entraînement du modèle](#entraînement-du-modèle)
-10. [Structure des fichiers](#structure-des-fichiers)
+4. [Pipeline de déploiement Docker](#pipeline-de-déploiement-docker)
+5. [Utilisation de l'API](#utilisation-de-lapi)
+6. [Import CSV — Prédiction par lot](#import-csv--prédiction-par-lot)
+7. [Interface Web](#interface-web)
+8. [Entraînement du modèle](#entraînement-du-modèle)
+9. [Structure des fichiers](#structure-des-fichiers)
 
 ---
 
@@ -49,7 +48,7 @@ Ce projet propose une solution complète pour estimer le prix de reprise d'un v�
 ```
 MLPVehiclePrice/
 ├── API/
-│   ├── api.py                  # API FastAPI
+│   ├── api.py                  # API FastAPI (unitaire, batch, CSV)
 │   ├── vehicle_price_model.pkl # Modèle sérialisé (pickle)
 │   └── client.ipynb            # Notebook client de test
 ├── frontend/
@@ -59,11 +58,9 @@ MLPVehiclePrice/
 │   └── plot_pca.py
 ├── main.ipynb                  # Notebook d'entraînement du modèle
 ├── vente_vehicule_2026.csv     # Dataset source
-├── Dockerfile                  # Image Docker
+├── Dockerfile                  # Définition de l'image Docker
 ├── requirements.txt            # Dépendances Python (Docker)
-├── .dockerignore
-├── build_docker.bat            # Script de build + run (Windows)
-├── build_docker.sh             # Script de build + run (Linux / VM GCE)
+├── .dockerignore               # Exclusions du contexte de build
 └── README.md
 ```
 
@@ -80,85 +77,139 @@ MLPVehiclePrice/
 
 ---
 
-## Démarrage rapide avec Docker
+## Pipeline de déploiement Docker
 
-### Prérequis
+Ce guide décrit pas à pas comment installer Docker, construire l'image du projet et lancer le service API. Deux environnements sont couverts : Windows (local) et Linux (VM Cloud / GCE).
 
-- **Windows** : [Docker Desktop](https://www.docker.com/products/docker-desktop) (installé automatiquement par le script si absent)
-- **Linux (VM GCE)** : Docker Engine (installé automatiquement par le script si absent)
+### Étape 1 — Installer Docker
 
-### Commandes manuelles (build uniquement)
+#### Sur Windows
 
-Si vous souhaitez construire l'image sans passer par les scripts :
+1. Téléchargez **Docker Desktop** depuis [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop) et lancez l'installeur.
+2. Suivez l'assistant d'installation. Cochez **"Use WSL 2 instead of Hyper-V"** si proposé (recommandé).
+3. Redémarrez votre PC si l'installeur le demande.
+4. Lancez **Docker Desktop** depuis le menu Démarrer. Attendez que l'icône dans la barre des tâches affiche **"Docker Desktop is running"** (icône verte / baleine stable).
+5. Vérifiez l'installation dans un terminal :
 
 ```bash
-cd MLPVehiclePrice
+docker --version
+# Docker version 28.x.x, build ...
+```
+
+#### Sur Linux (VM GCE / Ubuntu / Debian)
+
+Connectez-vous en SSH à votre VM puis exécutez :
+
+```bash
+# 1. Mettre à jour les paquets
+sudo apt-get update -y
+
+# 2. Installer les prérequis
+sudo apt-get install -y ca-certificates curl gnupg
+
+# 3. Ajouter la clé GPG et le dépôt Docker officiel
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/$(. /etc/os-release && echo "$ID") \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 4. Installer Docker Engine
+sudo apt-get update -y
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
+
+# 5. Activer et démarrer le service
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# 6. (Optionnel) Ajouter votre utilisateur au groupe docker pour éviter sudo
+sudo usermod -aG docker $USER
+newgrp docker
+
+# 7. Vérifier
+docker --version
+```
+
+### Étape 2 — Transférer le projet (VM uniquement)
+
+Si vous déployez sur une VM distante, transférez le dossier du projet :
+
+```bash
+# Depuis votre PC Windows, via gcloud :
+gcloud compute scp --recurse C:\Users\Axel\PycharmProjects\MLPVehiclePrice\ NOM_VM:~/MLPVehiclePrice --zone=ZONE
+
+# Ou via scp classique :
+scp -r MLPVehiclePrice/ utilisateur@IP_VM:~/MLPVehiclePrice
+```
+
+### Étape 3 — Construire l'image Docker
+
+Placez-vous dans le répertoire du projet et lancez le build :
+
+```bash
+cd MLPVehiclePrice      # ou ~/MLPVehiclePrice sur la VM
 docker build -t mlp-vehicle-price-axelbcr:1.0.0 .
 ```
 
----
+Le Dockerfile effectue les opérations suivantes :
+1. Part d'une image `python:3.12-slim` (légère, ~150 Mo)
+2. Installe les dépendances système (`gcc`) puis les dépendances Python depuis `requirements.txt`
+3. Copie le code de l'API (`api.py`), le modèle entraîné (`vehicle_price_model.pkl`) et l'interface web (`frontend/`)
+4. Expose le port `8001` et configure le healthcheck
+5. Lance Uvicorn au démarrage du container
 
-## Lancer le service API
+Vérifiez que l'image est bien créée :
 
-Deux scripts automatisent l'intégralité du processus : vérification / installation de Docker, construction de l'image, et lancement du container. Choisissez celui correspondant à votre OS.
-
-### Windows — `build_docker.bat`
-
-Double-cliquez sur le fichier ou exécutez depuis un terminal :
-
-```batch
-cd C:\Users\Axel\PycharmProjects\MLPVehiclePrice
-build_docker.bat
+```bash
+docker images mlp-vehicle-price-axelbcr
+# REPOSITORY                    TAG       IMAGE ID       SIZE
+# mlp-vehicle-price-axelbcr     1.0.0     abc123def456   ~800MB
 ```
 
-**Ce que fait le script :**
-1. Vérifie si Docker Desktop est installé ; si non, le télécharge et l'installe automatiquement (via `winget` ou téléchargement direct)
-2. Vérifie que le daemon Docker répond (sinon, tente d'ouvrir Docker Desktop)
-3. Vérifie la présence des fichiers requis (`Dockerfile`, `API/vehicle_price_model.pkl`, `frontend/index.html`)
-4. Arrête et supprime un éventuel container existant portant le même nom
-5. Construit l'image `mlp-vehicle-price-axelbcr:1.0.0`
-6. Propose de lancer le container ; si oui, le démarre sur le port `8001` et ouvre le navigateur
+### Étape 4 — Lancer le container
 
-**Accès une fois le container lancé :**
+```bash
+docker run -d --name mlp-vehicle-price-axelbcr -p 8001:8001 mlp-vehicle-price-axelbcr:1.0.0
+```
+
+Détail des options :
+- `-d` : mode détaché (background)
+- `--name` : nom du container pour le manipuler facilement
+- `-p 8001:8001` : mappe le port 8001 de la machine hôte vers le port 8001 du container
+
+Vérifiez que le container tourne :
+
+```bash
+docker ps
+# CONTAINER ID   IMAGE                              STATUS          PORTS
+# a1b2c3d4e5f6   mlp-vehicle-price-axelbcr:1.0.0    Up 10 seconds   0.0.0.0:8001->8001/tcp
+```
+
+### Étape 5 — Accéder à l'application
+
+#### En local (Windows)
 
 | Ressource | URL |
 |---|---|
 | Interface web | http://localhost:8001 |
-| Swagger UI (docs) | http://localhost:8001/docs |
-| ReDoc | http://localhost:8001/redoc |
-| Info modèle | http://localhost:8001/model/info |
+| Swagger UI (docs interactive) | http://localhost:8001/docs |
+| ReDoc (docs lecture) | http://localhost:8001/redoc |
+| Infos modèle (JSON) | http://localhost:8001/model/info |
 
-### Linux / VM GCE — `build_docker.sh`
+#### Sur une VM Cloud (GCE)
 
-Transférez le projet sur la VM puis exécutez le script :
-
-```bash
-# Depuis votre PC Windows (transfert vers la VM GCE) :
-gcloud compute scp --recurse MLPVehiclePrice/ NOM_VM:~/MLPVehiclePrice --zone=ZONE
-
-# Sur la VM :
-cd ~/MLPVehiclePrice
-chmod +x build_docker.sh
-./build_docker.sh
-```
-
-**Ce que fait le script :**
-1. Vérifie si Docker Engine est installé ; si non, l'installe automatiquement via le dépôt officiel Docker (`apt`)
-2. Active le service Docker et ajoute l'utilisateur courant au groupe `docker`
-3. Vérifie la présence des fichiers requis
-4. Arrête et supprime un éventuel container existant
-5. Construit l'image `mlp-vehicle-price-axelbcr:1.0.0`
-6. Propose de lancer le container ; si oui, détecte l'**IP externe** de la VM (metadata GCE) et affiche les liens d'accès
-
-**Accès une fois le container lancé :**
+Remplacez `IP_EXTERNE` par l'IP externe de votre VM (visible dans la console GCE) :
 
 | Ressource | URL |
 |---|---|
-| Interface web | http://IP_EXTERNE_VM:8001 |
-| Swagger UI (docs) | http://IP_EXTERNE_VM:8001/docs |
-| API Endpoint | POST http://IP_EXTERNE_VM:8001/predict/full |
+| Interface web | http://IP_EXTERNE:8001 |
+| Swagger UI | http://IP_EXTERNE:8001/docs |
 
-> **Important** : vérifiez que le port `8001` est ouvert dans le firewall GCE :
+> **Firewall GCE** : assurez-vous que le port 8001 est ouvert :
 > ```bash
 > gcloud compute firewall-rules create allow-api-8001 \
 >     --allow tcp:8001 \
@@ -166,13 +217,22 @@ chmod +x build_docker.sh
 >     --description "Ouvrir port 8001 pour MLPVehiclePrice API"
 > ```
 
-### Arrêter et supprimer le container
+### Gestion du container
 
 ```bash
+# Voir les logs en temps réel
+docker logs -f mlp-vehicle-price-axelbcr
+
+# Arrêter le container
 docker stop mlp-vehicle-price-axelbcr
+
+# Redémarrer le container
+docker start mlp-vehicle-price-axelbcr
+
+# Supprimer le container (après arrêt)
 docker rm mlp-vehicle-price-axelbcr
 
-# Supprimer l'image (optionnel) :
+# Supprimer l'image
 docker rmi mlp-vehicle-price-axelbcr:1.0.0
 ```
 
@@ -278,7 +338,9 @@ curl -X POST http://localhost:8001/predict/csv \
 
 Retourne les métadonnées du modèle : type, features, et valeurs acceptées pour les variables catégorielles (marques, énergies, carburants).
 
-### Exemple Python
+### Exemples d'appel
+
+#### Python (requests)
 
 ```python
 import requests
@@ -293,8 +355,38 @@ response = requests.post("http://localhost:8001/predict/full", json={
     "Carburant": "Essence"
 })
 
-print(response.json())
-# {'predicted_price': 10757.39, 'ic_0.95': [5901.87, 15612.91]}
+data = response.json()
+print(f"Prix estimé : {data['predicted_price']:.2f} €")
+print(f"IC 95% : [{data['ic_0.95'][0]:.2f}, {data['ic_0.95'][1]:.2f}]")
+```
+
+#### JavaScript (fetch)
+
+```javascript
+const response = await fetch("http://localhost:8001/predict/full", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        Kilometrage: 52335,
+        Annee_Facture: 2024,
+        Annee_veh: 2020,
+        Marque_veh: "CITROEN",
+        Modele_veh: "C5 AIRCROSS",
+        Type_Energie: "Thermique",
+        Carburant: "Diesel"
+    })
+});
+
+const data = await response.json();
+console.log("Prix estimé :", data.predicted_price);
+```
+
+#### cURL
+
+```bash
+curl -X POST http://localhost:8001/predict/full \
+  -H "Content-Type: application/json" \
+  -d '{"Kilometrage":52335,"Annee_Facture":2024,"Annee_veh":2020,"Marque_veh":"CITROEN","Modele_veh":"C5 AIRCROSS","Type_Energie":"Thermique","Carburant":"Diesel"}'
 ```
 
 ---
@@ -389,6 +481,7 @@ Fonctionnalités :
 - Affichage du prix estimé et de l'intervalle de confiance à 95%
 - **Import CSV** par glisser-déposer avec aperçu des résultats en tableau
 - **Export CSV** des prédictions en un clic
+- **Documentation API** intégrée avec extraits de code (Python, JavaScript, cURL)
 - Design dark theme, responsive (mobile / desktop)
 - Liens directs vers Swagger UI, ReDoc et l'endpoint d'info modèle
 
@@ -417,8 +510,6 @@ Pour ré-entraîner le modèle, exécutez l'intégralité du notebook puis relan
 | `Dockerfile` | Définition de l'image Docker (Python 3.12-slim) |
 | `requirements.txt` | Dépendances Python pour le container |
 | `.dockerignore` | Exclusions du contexte Docker |
-| `build_docker.bat` | Script Windows : installe Docker + build + run |
-| `build_docker.sh` | Script Linux/GCE : installe Docker + build + run |
 | `API/api.py` | Code source de l'API FastAPI (unitaire, batch, CSV) |
 | `API/vehicle_price_model.pkl` | Modèle MLP + encodeurs + scalers (pickle) |
 | `frontend/index.html` | Interface web single-page avec import/export CSV |
