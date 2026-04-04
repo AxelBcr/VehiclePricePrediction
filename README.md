@@ -1,113 +1,82 @@
-# MLPVehiclePrice
+# VehiclePricePrediction
 
 **Estimation du prix de reprise d'un véhicule d'occasion** via un réseau de neurones **Multi-Layer Perceptron** (scikit-learn), exposé par une API **FastAPI** et servi dans un container **Docker**.
 
-> Projet UCO — B2 S4 Application Marketing  
-> Auteur : Axel Bouchaud-Roche — Mars 2026
+> Projet UCO, B2 S4 Application Marketing
+> Auteur : Axel Bouchaud-Roche, mars 2026
+
+---
+
+## Quick Start
+
+```bash
+# 1. Cloner le projet
+git clone https://github.com/AxelBcr/VehiclePricePrediction.git
+cd VehiclePricePrediction
+
+# 2. Construire l'image Docker
+docker build -t mlp-vehicle-price:1.0.0 .
+
+# 3. Lancer le container
+docker run -d --name mlp-vehicle-price -p 8001:8001 mlp-vehicle-price:1.0.0
+```
+
+Ouvrez http://localhost:8001 dans votre navigateur. C'est prêt.
+
+---
+
+## Prérequis
+
+| Outil | Windows | Linux (VM) |
+|-------|---------|------------|
+| **Git** | [git-scm.com](https://git-scm.com/download/win) | `sudo apt-get install -y git` |
+| **Docker** | [Docker Desktop](https://www.docker.com/products/docker-desktop) | Voir [installation Docker Linux](#installer-docker-sur-linux-vm) ci-dessous |
+
+> Note : Python n'est pas requis sur la machine hôte. Tout s'exécute dans le container Docker.
+> Pour ré-entraîner le modèle via `main.ipynb`, il faut Python 3.12+ et les dépendances listées dans `requirements.txt`.
 
 ---
 
 ## Table des matières
 
-1. [Présentation](#présentation)
-2. [Architecture du projet](#architecture-du-projet)
-3. [Stack technique](#stack-technique)
-4. [Pipeline de déploiement Docker](#pipeline-de-déploiement-docker)
-5. [Utilisation de l'API](#utilisation-de-lapi)
-6. [Import CSV — Prédiction par lot](#import-csv--prédiction-par-lot)
-7. [Interface Web](#interface-web)
-8. [Entraînement du modèle](#entraînement-du-modèle)
-9. [Structure des fichiers](#structure-des-fichiers)
+1. [Quick Start](#quick-start)
+2. [Prérequis](#prérequis)
+3. [Installation Docker pas à pas](#installation-docker-pas-à-pas)
+4. [Utilisation de l'API](#utilisation-de-lapi)
+5. [Import CSV : prédiction par lot](#import-csv--prédiction-par-lot)
+6. [Interface Web](#interface-web)
+7. [Entraînement du modèle](#entraînement-du-modèle)
+8. [Architecture du projet](#architecture-du-projet)
+9. [Stack technique](#stack-technique)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Présentation
+## Installation Docker pas à pas
 
-Ce projet propose une solution complète pour estimer le prix de reprise d'un véhicule d'occasion en France. Il couvre l'ensemble du pipeline :
-
-- **Analyse exploratoire & feature engineering** sur un dataset de ventes automobiles françaises (2020–2026)
-- **Entraînement d'un MLPRegressor** avec pipeline de preprocessing (log, Yeo-Johnson, StandardScaler, OneHotEncoder)
-- **API REST** (FastAPI) pour interroger le modèle en temps réel (unitaire ou par lot via CSV)
-- **Interface web** embarquée pour une utilisation sans code, avec import/export CSV
-- **Containerisation Docker** pour un déploiement reproductible
-
-### Caractéristiques du modèle
-
-| Élément | Détail |
-|---|---|
-| Algorithme | `MLPRegressor` (scikit-learn) |
-| Features numériques | Âge du véhicule, log inverse kilométrage, km/an, année facture, âge³ |
-| Features catégorielles | Marque, modèle, type d'énergie, carburant |
-| Preprocessing cible | `log1p` → `PowerTransformer` (Yeo-Johnson) → `StandardScaler` |
-| Sortie | Prix estimé (€) + intervalle de confiance à 95% |
-
----
-
-## Architecture du projet
-
-```
-MLPVehiclePrice/
-├── API/
-│   ├── api.py                  # API FastAPI (unitaire, batch, CSV)
-│   ├── vehicle_price_model.pkl # Modèle sérialisé (pickle)
-│   └── client.ipynb            # Notebook client de test
-├── frontend/
-│   └── index.html              # Interface web (HTML/CSS/JS)
-├── modules/
-│   ├── inverse_transform_pipeline.py
-│   └── plot_pca.py
-├── main.ipynb                  # Notebook d'entraînement du modèle
-├── vente_vehicule_2026.csv     # Dataset source
-├── Dockerfile                  # Définition de l'image Docker
-├── requirements.txt            # Dépendances Python (Docker)
-├── .dockerignore               # Exclusions du contexte de build
-└── README.md
-```
-
----
-
-## Stack technique
-
-- **Python 3.12** — Langage principal
-- **scikit-learn 1.8** — MLPRegressor, preprocessing, évaluation
-- **FastAPI** — Framework API REST asynchrone
-- **Uvicorn** — Serveur ASGI
-- **Docker** — Containerisation
-- **HTML/CSS/JS** — Interface web embarquée (vanilla, sans framework)
-
----
-
-## Pipeline de déploiement Docker
-
-Ce guide décrit pas à pas comment installer Docker, construire l'image du projet et lancer le service API. Deux environnements sont couverts : Windows (local) et Linux (VM Cloud / GCE).
-
-### Étape 1 — Installer Docker
-
-#### Sur Windows
+### Installer Docker sur Windows
 
 1. Téléchargez **Docker Desktop** depuis [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop) et lancez l'installeur.
-2. Suivez l'assistant d'installation. Cochez **"Use WSL 2 instead of Hyper-V"** si proposé (recommandé).
-3. Redémarrez votre PC si l'installeur le demande.
-4. Lancez **Docker Desktop** depuis le menu Démarrer. Attendez que l'icône dans la barre des tâches affiche **"Docker Desktop is running"** (icône verte / baleine stable).
-5. Vérifiez l'installation dans un terminal :
+2. Cochez **"Use WSL 2 instead of Hyper-V"** si proposé (recommandé).
+3. Redémarrez votre PC si demandé.
+4. Lancez **Docker Desktop** depuis le menu Démarrer. Attendez que l'icône affiche **"Docker Desktop is running"**.
+5. Vérifiez dans un terminal :
 
 ```bash
 docker --version
 # Docker version 28.x.x, build ...
 ```
 
-#### Sur Linux (VM GCE / Ubuntu / Debian)
+### Installer Docker sur Linux (VM)
 
 Connectez-vous en SSH à votre VM puis exécutez :
 
 ```bash
-# 1. Mettre à jour les paquets
+# Mettre à jour et installer les prérequis
 sudo apt-get update -y
-
-# 2. Installer les prérequis
 sudo apt-get install -y ca-certificates curl gnupg
 
-# 3. Ajouter la clé GPG et le dépôt Docker officiel
+# Ajouter le dépôt Docker officiel
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg \
   | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -118,135 +87,88 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
   | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# 4. Installer Docker Engine
+# Installer Docker Engine
 sudo apt-get update -y
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin
 
-# 5. Activer et démarrer le service
+# Activer et démarrer le service
 sudo systemctl enable docker
 sudo systemctl start docker
 
-# 6. (Optionnel) Ajouter votre utilisateur au groupe docker pour éviter sudo
+# (Optionnel) Utiliser Docker sans sudo
 sudo usermod -aG docker $USER
 newgrp docker
 
-# 7. Vérifier
+# Vérifier
 docker --version
 ```
 
-### Étape 2 — Transférer le projet (VM uniquement)
-
-Si vous déployez sur une VM distante, transférez le dossier du projet :
+### Cloner et lancer le projet
 
 ```bash
-# Depuis votre PC Windows, via gcloud :
-gcloud compute scp --recurse C:\Users\Axel\PycharmProjects\MLPVehiclePrice\ NOM_VM:~/MLPVehiclePrice --zone=ZONE
-
-# Ou via scp classique :
-scp -r MLPVehiclePrice/ utilisateur@IP_VM:~/MLPVehiclePrice
+git clone https://github.com/AxelBcr/VehiclePricePrediction.git
+cd VehiclePricePrediction
+docker build -t mlp-vehicle-price:1.0.0 .
+docker run -d --name mlp-vehicle-price -p 8001:8001 mlp-vehicle-price:1.0.0
 ```
-
-### Étape 3 — Construire l'image Docker
-
-Placez-vous dans le répertoire du projet et lancez le build :
-
-```bash
-cd MLPVehiclePrice      # ou ~/MLPVehiclePrice sur la VM
-docker build -t mlp-vehicle-price-axelbcr:1.0.0 .
-```
-
-Le Dockerfile effectue les opérations suivantes :
-1. Part d'une image `python:3.12-slim` (légère, ~150 Mo)
-2. Installe les dépendances système (`gcc`) puis les dépendances Python depuis `requirements.txt`
-3. Copie le code de l'API (`api.py`), le modèle entraîné (`vehicle_price_model.pkl`) et l'interface web (`frontend/`)
-4. Expose le port `8001` et configure le healthcheck
-5. Lance Uvicorn au démarrage du container
-
-Vérifiez que l'image est bien créée :
-
-```bash
-docker images mlp-vehicle-price-axelbcr
-# REPOSITORY                    TAG       IMAGE ID       SIZE
-# mlp-vehicle-price-axelbcr     1.0.0     abc123def456   ~800MB
-```
-
-### Étape 4 — Lancer le container
-
-```bash
-docker run -d --name mlp-vehicle-price-axelbcr -p 8001:8001 mlp-vehicle-price-axelbcr:1.0.0
-```
-
-Détail des options :
-- `-d` : mode détaché (background)
-- `--name` : nom du container pour le manipuler facilement
-- `-p 8001:8001` : mappe le port 8001 de la machine hôte vers le port 8001 du container
 
 Vérifiez que le container tourne :
 
 ```bash
 docker ps
-# CONTAINER ID   IMAGE                              STATUS          PORTS
-# a1b2c3d4e5f6   mlp-vehicle-price-axelbcr:1.0.0    Up 10 seconds   0.0.0.0:8001->8001/tcp
+# CONTAINER ID   IMAGE                       STATUS          PORTS
+# a1b2c3d4e5f6   mlp-vehicle-price:1.0.0     Up 10 seconds   0.0.0.0:8001->8001/tcp
 ```
 
-### Étape 5 — Accéder à l'application
+### Accéder à l'application
 
-#### En local (Windows)
+En local (Windows) :
 
 | Ressource | URL |
-|---|---|
+|-----------|-----|
 | Interface web | http://localhost:8001 |
-| Swagger UI (docs interactive) | http://localhost:8001/docs |
+| Swagger UI (docs interactives) | http://localhost:8001/docs |
 | ReDoc (docs lecture) | http://localhost:8001/redoc |
 | Infos modèle (JSON) | http://localhost:8001/model/info |
 
-#### Sur une VM Cloud (GCE)
+Sur une VM distante : remplacez `localhost` par l'IP de votre VM. Assurez-vous que le port 8001 est ouvert dans le pare-feu de la VM.
 
-Remplacez `IP_EXTERNE` par l'IP externe de votre VM (visible dans la console GCE) :
+<details>
+<summary>Exemple pour Google Cloud (GCE)</summary>
 
-| Ressource | URL |
-|---|---|
-| Interface web | http://IP_EXTERNE:8001 |
-| Swagger UI | http://IP_EXTERNE:8001/docs |
+```bash
+# Transférer le projet depuis Windows
+gcloud compute scp --recurse ./VehiclePricePrediction NOM_VM:~/VehiclePricePrediction --zone=ZONE
 
-> **Firewall GCE** : assurez-vous que le port 8001 est ouvert :
-> ```bash
-> gcloud compute firewall-rules create allow-api-8001 \
->     --allow tcp:8001 \
->     --source-ranges 0.0.0.0/0 \
->     --description "Ouvrir port 8001 pour MLPVehiclePrice API"
-> ```
+# Ouvrir le port 8001
+gcloud compute firewall-rules create allow-api-8001 \
+    --allow tcp:8001 \
+    --source-ranges 0.0.0.0/0 \
+    --description "Ouvrir port 8001 pour l'API"
+```
+
+Accédez ensuite à `http://IP_EXTERNE_VM:8001`.
+
+</details>
 
 ### Gestion du container
 
 ```bash
-# Voir les logs en temps réel
-docker logs -f mlp-vehicle-price-axelbcr
-
-# Arrêter le container
-docker stop mlp-vehicle-price-axelbcr
-
-# Redémarrer le container
-docker start mlp-vehicle-price-axelbcr
-
-# Supprimer le container (après arrêt)
-docker rm mlp-vehicle-price-axelbcr
-
-# Supprimer l'image
-docker rmi mlp-vehicle-price-axelbcr:1.0.0
+docker logs -f mlp-vehicle-price     # Logs en temps réel
+docker stop mlp-vehicle-price        # Arrêter
+docker start mlp-vehicle-price       # Redémarrer
+docker rm mlp-vehicle-price          # Supprimer le container (après arrêt)
+docker rmi mlp-vehicle-price:1.0.0   # Supprimer l'image
 ```
 
 ---
 
 ## Utilisation de l'API
 
-### `POST /predict/full` — Prédiction unitaire
-
-Estime le prix de reprise d'un seul véhicule.
-
-**Requête (JSON) :**
+### `POST /predict/full` (prédiction unitaire)
 
 ```json
+// Requête
 {
     "Kilometrage": 52335.0,
     "Annee_Facture": 2024,
@@ -256,24 +178,20 @@ Estime le prix de reprise d'un seul véhicule.
     "Type_Energie": "Thermique",
     "Carburant": "Diesel"
 }
-```
 
-**Réponse :**
-
-```json
+// Réponse
 {
     "predicted_price": 18542.37,
     "ic_0.95": [13686.85, 23397.89]
 }
 ```
 
-### `POST /predict/batch` — Prédiction par lot (JSON)
+### `POST /predict/batch` (prédiction par lot JSON)
 
-Estime le prix de plusieurs véhicules en un seul appel.
-
-**Requête :**
+Envoie un tableau `"vehicles": [...]` contenant plusieurs véhicules. Retourne un objet `"results": [...]` avec `predicted_price`, `ic_low`, `ic_high` et `error` pour chaque véhicule.
 
 ```json
+// Requête
 {
     "vehicles": [
         {
@@ -296,16 +214,12 @@ Estime le prix de plusieurs véhicules en un seul appel.
         }
     ]
 }
-```
 
-**Réponse :**
-
-```json
+// Réponse
 {
     "results": [
         {
             "index": 0,
-            "input": { "..." },
             "predicted_price": 18542.37,
             "ic_low": 13686.85,
             "ic_high": 23397.89,
@@ -313,7 +227,6 @@ Estime le prix de plusieurs véhicules en un seul appel.
         },
         {
             "index": 1,
-            "input": { "..." },
             "predicted_price": 10757.39,
             "ic_low": 5901.87,
             "ic_high": 15612.91,
@@ -324,9 +237,9 @@ Estime le prix de plusieurs véhicules en un seul appel.
 }
 ```
 
-### `POST /predict/csv` — Prédiction par lot (upload CSV)
+### `POST /predict/csv` (prédiction par lot, upload CSV)
 
-Upload un fichier CSV, retourne un CSV enrichi avec les prédictions. Voir la section [Import CSV](#import-csv--prédiction-par-lot) pour le format attendu.
+Upload un fichier CSV, retourne un CSV enrichi avec les colonnes de prédiction. Voir la section [Import CSV](#import-csv--prédiction-par-lot).
 
 ```bash
 curl -X POST http://localhost:8001/predict/csv \
@@ -340,7 +253,10 @@ Retourne les métadonnées du modèle : type, features, et valeurs acceptées po
 
 ### Exemples d'appel
 
-#### Python (requests)
+#### /predict/full (unitaire)
+
+<details>
+<summary>Python</summary>
 
 ```python
 import requests
@@ -360,7 +276,10 @@ print(f"Prix estimé : {data['predicted_price']:.2f} €")
 print(f"IC 95% : [{data['ic_0.95'][0]:.2f}, {data['ic_0.95'][1]:.2f}]")
 ```
 
-#### JavaScript (fetch)
+</details>
+
+<details>
+<summary>JavaScript</summary>
 
 ```javascript
 const response = await fetch("http://localhost:8001/predict/full", {
@@ -381,7 +300,10 @@ const data = await response.json();
 console.log("Prix estimé :", data.predicted_price);
 ```
 
-#### cURL
+</details>
+
+<details>
+<summary>cURL</summary>
 
 ```bash
 curl -X POST http://localhost:8001/predict/full \
@@ -389,70 +311,63 @@ curl -X POST http://localhost:8001/predict/full \
   -d '{"Kilometrage":52335,"Annee_Facture":2024,"Annee_veh":2020,"Marque_veh":"CITROEN","Modele_veh":"C5 AIRCROSS","Type_Energie":"Thermique","Carburant":"Diesel"}'
 ```
 
----
+</details>
 
-## Import CSV — Prédiction par lot
+#### /predict/batch (lot JSON)
 
-L'interface web et l'endpoint `POST /predict/csv` permettent d'estimer le prix de reprise de plusieurs véhicules à partir d'un fichier CSV.
+<details>
+<summary>Python</summary>
 
-### Format du CSV d'entrée
+```python
+import requests
 
-Le fichier doit être au format CSV avec **séparateur virgule** (`,`) et encodage **UTF-8**. Les 7 colonnes suivantes sont **obligatoires** :
+vehicles = {
+    "vehicles": [
+        {
+            "Kilometrage": 52335,
+            "Annee_Facture": 2024,
+            "Annee_veh": 2020,
+            "Marque_veh": "CITROEN",
+            "Modele_veh": "C5 AIRCROSS",
+            "Type_Energie": "Thermique",
+            "Carburant": "Diesel"
+        },
+        {
+            "Kilometrage": 9932,
+            "Annee_Facture": 2020,
+            "Annee_veh": 2017,
+            "Marque_veh": "PEUGEOT",
+            "Modele_veh": "108 I Ph1",
+            "Type_Energie": "Thermique",
+            "Carburant": "Essence"
+        }
+    ]
+}
 
-| Colonne | Type | Description | Exemple |
-|---|---|---|---|
-| `Kilometrage` | Nombre | Kilométrage exact du véhicule (valeur précise, pas d'arrondi) | `52335` |
-| `Annee_Facture` | Entier | Année de la facture de reprise | `2024` |
-| `Annee_veh` | Entier | Année de première immatriculation du véhicule | `2020` |
-| `Marque_veh` | Texte | Marque du véhicule (doit correspondre aux marques connues du modèle) | `CITROEN` |
-| `Modele_veh` | Texte | Modèle du véhicule | `C5 AIRCROSS` |
-| `Type_Energie` | Texte | Type d'énergie : `Thermique`, `Hybride`, `Electrique` | `Thermique` |
-| `Carburant` | Texte | Carburant : `Essence`, `Diesel`, `Electrique`, etc. | `Diesel` |
+response = requests.post("http://localhost:8001/predict/batch", json=vehicles)
+data = response.json()
 
-**Exemple de fichier CSV :**
-
-```csv
-Kilometrage,Annee_Facture,Annee_veh,Marque_veh,Modele_veh,Type_Energie,Carburant
-52335,2024,2020,CITROEN,C5 AIRCROSS,Thermique,Diesel
-9932,2020,2017,PEUGEOT,108 I Ph1,Thermique,Essence
-120000,2023,2018,RENAULT,CLIO V,Thermique,Essence
-45000,2025,2022,VOLKSWAGEN,GOLF VIII,Thermique,Essence
-8500,2024,2023,RENAULT,ZOE,Electrique,Electrique
+for r in data["results"]:
+    print(f"Véhicule {r['index']} : {r['predicted_price']:.2f} € [{r['ic_low']:.2f} - {r['ic_high']:.2f}]")
 ```
 
-**Remarques :**
-- L'ordre des colonnes n'a pas d'importance, seuls les noms comptent.
-- Les colonnes supplémentaires sont conservées dans le fichier de sortie mais ignorées par le modèle.
-- Les marques et carburants disponibles sont consultables via l'endpoint `GET /model/info`.
+</details>
 
-### Format du CSV de sortie
-
-Le fichier retourné reprend toutes les colonnes du fichier d'entrée et ajoute 4 colonnes :
-
-| Colonne ajoutée | Description |
-|---|---|
-| `Prix_Predit` | Prix de reprise estimé en euros |
-| `IC_95_Bas` | Borne basse de l'intervalle de confiance à 95% |
-| `IC_95_Haut` | Borne haute de l'intervalle de confiance à 95% |
-| `Erreur` | Message d'erreur si la prédiction a échoué pour cette ligne (vide sinon) |
-
-### Utilisation via l'interface web
-
-1. Ouvrez l'interface web (`http://localhost:8001`)
-2. Faites défiler jusqu'à la section **Import CSV — Prédiction par lot**
-3. Glissez-déposez votre fichier CSV ou cliquez pour le sélectionner
-4. Les résultats s'affichent dans un tableau avec les prédictions
-5. Cliquez sur **Exporter les résultats (.csv)** pour télécharger le fichier enrichi
-
-### Utilisation via cURL
+<details>
+<summary>cURL</summary>
 
 ```bash
-curl -X POST http://localhost:8001/predict/csv \
-  -F "file=@mes_vehicules.csv" \
-  -o predictions_vehicules.csv
+curl -X POST http://localhost:8001/predict/batch \
+  -H "Content-Type: application/json" \
+  -d '{"vehicles":[{"Kilometrage":52335,"Annee_Facture":2024,"Annee_veh":2020,"Marque_veh":"CITROEN","Modele_veh":"C5 AIRCROSS","Type_Energie":"Thermique","Carburant":"Diesel"},{"Kilometrage":9932,"Annee_Facture":2020,"Annee_veh":2017,"Marque_veh":"PEUGEOT","Modele_veh":"108 I Ph1","Type_Energie":"Thermique","Carburant":"Essence"}]}'
 ```
 
-### Utilisation via Python
+</details>
+
+#### /predict/csv (lot CSV)
+
+<details>
+<summary>Python</summary>
 
 ```python
 import requests
@@ -463,55 +378,153 @@ with open("mes_vehicules.csv", "rb") as f:
         files={"file": ("mes_vehicules.csv", f, "text/csv")}
     )
 
-with open("predictions_vehicules.csv", "wb") as out:
+with open("predictions.csv", "wb") as out:
     out.write(response.content)
 
-print("Export terminé : predictions_vehicules.csv")
+print("Export terminé : predictions.csv")
 ```
+
+</details>
+
+<details>
+<summary>cURL</summary>
+
+```bash
+curl -X POST http://localhost:8001/predict/csv \
+  -F "file=@mes_vehicules.csv" \
+  -o predictions.csv
+```
+
+</details>
+
+---
+
+## Import CSV : prédiction par lot
+
+### Format du CSV d'entrée
+
+Séparateur virgule (`,`), encodage UTF-8. Les 7 colonnes suivantes sont obligatoires (l'ordre n'a pas d'importance) :
+
+| Colonne | Type | Exemple |
+|---------|------|---------|
+| `Kilometrage` | Nombre | `52335` |
+| `Annee_Facture` | Entier | `2024` |
+| `Annee_veh` | Entier | `2020` |
+| `Marque_veh` | Texte | `CITROEN` |
+| `Modele_veh` | Texte | `C5 AIRCROSS` |
+| `Type_Energie` | Texte | `Thermique` / `Hybride` / `Electrique` |
+| `Carburant` | Texte | `Diesel` / `Essence` / `Electrique` |
+
+Les colonnes supplémentaires sont conservées dans le fichier de sortie mais ignorées par le modèle. Les valeurs acceptées pour les marques et carburants sont consultables via `GET /model/info`.
+
+Exemple :
+
+```csv
+Kilometrage,Annee_Facture,Annee_veh,Marque_veh,Modele_veh,Type_Energie,Carburant
+52335,2024,2020,CITROEN,C5 AIRCROSS,Thermique,Diesel
+9932,2020,2017,PEUGEOT,108 I Ph1,Thermique,Essence
+120000,2023,2018,RENAULT,CLIO V,Thermique,Essence
+```
+
+### Format du CSV de sortie
+
+Le fichier retourné reprend toutes les colonnes d'entrée et ajoute : `Prix_Predit`, `IC_95_Bas`, `IC_95_Haut`, `Erreur`.
+
+### Utilisation via l'interface web
+
+1. Ouvrez `http://localhost:8001`
+2. Descendez à la section **Import CSV**
+3. Glissez-déposez votre fichier CSV ou cliquez pour le sélectionner
+4. Les résultats s'affichent en tableau
+5. Cliquez **Exporter les résultats (.csv)** pour télécharger
 
 ---
 
 ## Interface Web
 
-L'interface est accessible directement à la racine du serveur (`http://localhost:8001` ou `http://IP_VM:8001`). Elle est embarquée dans le container Docker et ne nécessite aucune installation supplémentaire.
+L'interface est à la racine du serveur (`http://localhost:8001`). Le container l'inclut directement, rien à installer en plus.
 
-Fonctionnalités :
-- Formulaire de saisie avec les champs du modèle (kilométrage précis, sans arrondi)
-- Listes déroulantes alimentées dynamiquement depuis `/model/info`
-- Affichage du prix estimé et de l'intervalle de confiance à 95%
-- **Import CSV** par glisser-déposer avec aperçu des résultats en tableau
-- **Export CSV** des prédictions en un clic
-- **Documentation API** intégrée avec extraits de code (Python, JavaScript, cURL)
-- Design dark theme, responsive (mobile / desktop)
-- Liens directs vers Swagger UI, ReDoc et l'endpoint d'info modèle
+Elle propose un formulaire de saisie avec des listes déroulantes alimentées par `/model/info`, l'affichage du prix estimé avec IC 95%, et l'import/export CSV par drag-and-drop. La doc API avec des extraits de code Python, JS et cURL est intégrée dans la page. Dark theme, responsive.
 
 ---
 
 ## Entraînement du modèle
 
-Le notebook `main.ipynb` contient le pipeline complet :
+Tout le pipeline d'entraînement est dans `main.ipynb`. Pour le lancer, il faut Python 3.12+ et les dépendances :
 
-1. **Chargement** du CSV `vente_vehicule_2026.csv`
-2. **Nettoyage** — filtrage des valeurs aberrantes (kilométrage, prix)
-3. **Feature engineering** — variables dérivées (âge, km/an, log inverse km, âge³)
-4. **Preprocessing** — `log1p` → `PowerTransformer` (Yeo-Johnson) → `StandardScaler` pour la cible ; `OneHotEncoder` pour les catégorielles
-5. **Entraînement** du `MLPRegressor` avec recherche d'hyperparamètres
-6. **Évaluation** — MSE, R², résidus
-7. **Export** du package complet dans `vehicle_price_model.pkl`
+```bash
+pip install -r requirements.txt
+```
 
-Pour ré-entraîner le modèle, exécutez l'intégralité du notebook puis relancez le build Docker.
+Pipeline : chargement du dataset → nettoyage (filtrage aberrants) → feature engineering (âge, km/an, log inverse km, âge³) → preprocessing (`log1p` → Yeo-Johnson → StandardScaler pour la cible, `OneHotEncoder` pour les catégorielles) → entraînement `MLPRegressor` → évaluation (MSE, R²) → export du modèle dans `API/vehicle_price_model.pkl`.
+
+### Caractéristiques du modèle
+
+| Élément | Détail |
+|---------|--------|
+| Algorithme | `MLPRegressor` (scikit-learn) |
+| Features numériques | Âge du véhicule, log inverse kilométrage, km/an, année facture, âge³ |
+| Features catégorielles | Marque, modèle, type d'énergie, carburant |
+| Preprocessing cible | `log1p` → `PowerTransformer` (Yeo-Johnson) → `StandardScaler` |
+| Sortie | Prix estimé (€) + intervalle de confiance à 95% |
+
+Après ré-entraînement, relancez le build Docker pour intégrer le nouveau modèle.
 
 ---
 
-## Structure des fichiers
+## Architecture du projet
 
-| Fichier | Description |
-|---|---|
-| `Dockerfile` | Définition de l'image Docker (Python 3.12-slim) |
-| `requirements.txt` | Dépendances Python pour le container |
-| `.dockerignore` | Exclusions du contexte Docker |
-| `API/api.py` | Code source de l'API FastAPI (unitaire, batch, CSV) |
-| `API/vehicle_price_model.pkl` | Modèle MLP + encodeurs + scalers (pickle) |
-| `frontend/index.html` | Interface web single-page avec import/export CSV |
-| `main.ipynb` | Notebook d'entraînement et d'analyse |
-| `vente_vehicule_2026.csv` | Dataset de ventes automobiles |
+```
+VehiclePricePrediction/
+├── API/
+│   ├── api.py                    # API FastAPI (unitaire, batch, CSV)
+│   ├── vehicle_price_model.pkl   # Modèle MLP sérialisé + encodeurs + scalers
+│   └── client.ipynb              # Notebook client de test de l'API
+├── frontend/
+│   └── index.html                # Interface web single-page (HTML/CSS/JS)
+├── modules/
+│   ├── inverse_transform_pipeline.py  # Inversion du pipeline de preprocessing
+│   └── plot_pca.py                    # Visualisation PCA (analyse exploratoire)
+├── main.ipynb                    # Notebook d'entraînement du modèle
+├── Dockerfile                    # Image Docker (Python 3.12-slim)
+├── requirements.txt              # Dépendances Python (Docker)
+└── README.md
+```
+
+---
+
+## Stack technique
+
+| Composant | Technologie |
+|-----------|-------------|
+| Langage | Python 3.12 |
+| ML | scikit-learn 1.8 (MLPRegressor, preprocessing, évaluation) |
+| API | FastAPI + Uvicorn |
+| Containerisation | Docker |
+| Frontend | HTML/CSS/JS vanilla (sans framework) |
+
+---
+
+## Troubleshooting
+
+**`docker: command not found`**
+Docker n'est pas installé ou pas dans le PATH. Sur Windows, vérifiez que Docker Desktop est lancé. Sur Linux, vérifiez l'installation avec `sudo systemctl status docker`.
+
+**`Cannot connect to the Docker daemon`**
+Le service Docker n'est pas démarré. Sur Windows : lancez Docker Desktop. Sur Linux : `sudo systemctl start docker`.
+
+**`Bind for 0.0.0.0:8001 failed: port is already allocated`**
+Le port 8001 est déjà utilisé. Soit arrêtez le processus qui l'occupe, soit mappez sur un autre port :
+```bash
+docker run -d --name mlp-vehicle-price -p 9001:8001 mlp-vehicle-price:1.0.0
+# → accessible sur http://localhost:9001
+```
+
+**`docker build` échoue sur une erreur réseau**
+Vérifiez votre connexion internet. Si vous êtes derrière un proxy, configurez-le dans Docker Desktop (Settings → Resources → Proxies).
+
+**Le container démarre mais l'interface ne répond pas**
+Vérifiez les logs : `docker logs mlp-vehicle-price`. Attendez quelques secondes que Uvicorn démarre complètement.
+
+**Sur VM distante, impossible d'accéder à l'application**
+Assurez-vous que le port 8001 est ouvert dans le pare-feu de la VM (iptables, security group AWS, firewall GCE, etc.).
