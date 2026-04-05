@@ -211,9 +211,42 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         .fade-up { animation: fadeUp 0.5s ease forwards; }
+
+        /* --- Page loading overlay --- */
+        .page-loader {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--bg-primary);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        .page-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .page-loader-logo { font-family: var(--font-body); font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        .page-loader-logo span { color: var(--accent); }
+        .loader-bar-track { width: 220px; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .loader-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
+        .loader-steps { margin-top: 1rem; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.06em; text-align: center; }
+        .loader-steps .done { color: var(--success); }
+
+        /* --- CSV progress bar --- */
+        .csv-progress { display: none; margin-top: 1rem; }
+        .csv-progress.visible { display: block; }
+        .csv-progress-bar-track { width: 100%; height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .csv-progress-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 4px; transition: width 0.2s ease; }
+        .csv-progress-bar-fill.uploading { background: var(--accent); }
+        .csv-progress-bar-fill.processing { background: var(--orange); animation: progressPulse 1.2s ease infinite; }
+        .csv-progress-bar-fill.complete { background: var(--success); }
+        .csv-progress-label { display: flex; justify-content: space-between; margin-top: 0.4rem; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); }
+        @keyframes progressPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
+
+<!-- Page loading overlay -->
+<div class="page-loader" id="page-loader">
+    <div class="page-loader-logo">MLP<span>VehiclePrice</span></div>
+    <div class="loader-bar-track"><div class="loader-bar-fill" id="loader-bar-fill"></div></div>
+    <div class="loader-steps" id="loader-steps">Chargement de la page…</div>
+</div>
 
 <header>
     <div class="badge">MLP Neural Network</div>
@@ -451,6 +484,13 @@ console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95
             <div class="sublabel">Format : .csv avec séparateur virgule (,)</div>
         </div>
         <div class="csv-status" id="csv-status"></div>
+        <div class="csv-progress" id="csv-progress">
+            <div class="csv-progress-bar-track"><div class="csv-progress-bar-fill" id="csv-progress-fill"></div></div>
+            <div class="csv-progress-label">
+                <span id="csv-progress-text">Envoi en cours…</span>
+                <span id="csv-progress-pct">0%</span>
+            </div>
+        </div>
         <div id="csv-results"></div>
         <div class="csv-format">
             <details>
@@ -482,6 +522,17 @@ console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95
     const API_BASE = window.location.origin;
 
     // ============================================================
+    //  Page loader
+    // ============================================================
+    function setLoaderProgress(pct, text) {
+        document.getElementById('loader-bar-fill').style.width = pct + '%';
+        if (text) document.getElementById('loader-steps').innerHTML = text;
+    }
+    function hidePageLoader() {
+        document.getElementById('page-loader').classList.add('hidden');
+    }
+
+    // ============================================================
     //  API Doc Tabs
     // ============================================================
     document.querySelectorAll('.api-tab').forEach(tab => {
@@ -497,19 +548,30 @@ console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95
     //  Load model info
     // ============================================================
     async function loadModelInfo() {
+        setLoaderProgress(20, 'Chargement du DOM… <span class="done">OK</span>');
+        await new Promise(r => setTimeout(r, 50));
+        setLoaderProgress(40, 'Connexion au serveur…');
+
         try {
             const res = await fetch(`${API_BASE}/model/info`);
             if (!res.ok) throw new Error('Endpoint /model/info indisponible');
+            setLoaderProgress(65, 'Récupération des données du modèle…');
             const info = await res.json();
             populateSelect('marque', info.marques_disponibles);
             populateSelect('energie', info.energies_disponibles);
             populateSelect('carburant', info.carburants_disponibles);
+            setLoaderProgress(85, 'Données du modèle chargées <span class="done">OK</span>');
         } catch (e) {
             console.warn('Impossible de charger /model/info, valeurs par defaut.', e);
             populateSelect('marque', ['CITROEN','PEUGEOT','RENAULT','VOLKSWAGEN','BMW','AUDI','MERCEDES','TOYOTA','FORD','OPEL']);
             populateSelect('energie', ['Thermique','Hybride','Electrique']);
             populateSelect('carburant', ['Essence','Diesel','Electrique','Hybride Essence','Hybride Diesel']);
+            setLoaderProgress(85, 'Valeurs par défaut appliquées <span class="done">(hors-ligne)</span>');
         }
+
+        setLoaderProgress(100, 'Prêt <span class="done">OK</span>');
+        await new Promise(r => setTimeout(r, 300));
+        hidePageLoader();
     }
 
     function populateSelect(id, values) {
@@ -592,13 +654,33 @@ console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95
     function formatPrice(n) { return Math.round(n).toLocaleString('fr-FR'); }
 
     // ============================================================
-    //  CSV Import / Export
+    //  CSV Import / Export — client-side batch with progress bar
     // ============================================================
     const csvZone = document.getElementById('csv-zone');
     const csvInput = document.getElementById('csv-input');
     const csvStatus = document.getElementById('csv-status');
     const csvResults = document.getElementById('csv-results');
-    let lastCSVBlob = null;
+    const csvProgress = document.getElementById('csv-progress');
+    const csvProgressFill = document.getElementById('csv-progress-fill');
+    const csvProgressText = document.getElementById('csv-progress-text');
+    const csvProgressPct = document.getElementById('csv-progress-pct');
+    let lastCSVRows = null;   // stored for export
+
+    function showCSVProgress(visible) {
+        csvProgress.classList.toggle('visible', visible);
+        if (!visible) {
+            csvProgressFill.style.width = '0%';
+            csvProgressFill.className = 'csv-progress-bar-fill';
+            csvProgressPct.textContent = '0%';
+        }
+    }
+    function setCSVProgress(done, total) {
+        const pct = total > 0 ? (done / total) * 100 : 0;
+        csvProgressFill.style.width = pct + '%';
+        csvProgressFill.className = 'csv-progress-bar-fill ' + (done >= total ? 'complete' : 'processing');
+        csvProgressPct.textContent = Math.round(pct) + '%';
+        csvProgressText.textContent = `Prix estimés : ${done} / ${total}`;
+    }
 
     csvZone.addEventListener('dragover', (e) => { e.preventDefault(); csvZone.classList.add('dragover'); });
     csvZone.addEventListener('dragleave', () => { csvZone.classList.remove('dragover'); });
@@ -611,40 +693,140 @@ console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95
     csvInput.addEventListener('change', () => { if (csvInput.files[0]) handleCSV(csvInput.files[0]); });
 
     async function handleCSV(file) {
-        showCSVStatus(`Envoi de ${file.name} (${(file.size / 1024).toFixed(1)} Ko)…`, '');
-        csvResults.innerHTML = ''; lastCSVBlob = null;
-        const formData = new FormData(); formData.append('file', file);
+        showCSVStatus(`Lecture de ${file.name} (${(file.size / 1024).toFixed(1)} Ko)…`, '');
+        csvResults.innerHTML = ''; lastCSVRows = null;
+
+        // 1. Read and parse CSV client-side
+        let text;
         try {
-            const res = await fetch(`${API_BASE}/predict/csv`, { method: 'POST', body: formData });
-            if (!res.ok) { const err = await res.json(); throw new Error(err.detail || `Erreur ${res.status}`); }
-            const blob = await res.blob(); lastCSVBlob = blob;
-            const text = await blob.text();
-            const rows = parseCSVText(text);
-            if (rows.length <= 1) { showCSVStatus('Le CSV retourné est vide.', 'error'); return; }
-            const successCount = rows.slice(1).filter(r => r[rows[0].indexOf('Prix_Predit')] !== '').length;
-            const errorCount = rows.length - 1 - successCount;
-            showCSVStatus(`${successCount} prédiction(s) réussie(s)` + (errorCount > 0 ? `, ${errorCount} erreur(s)` : ''), errorCount > 0 ? '' : 'success');
-            renderCSVTable(rows);
-        } catch (err) { showCSVStatus(err.message, 'error'); }
+            text = await file.text();
+        } catch {
+            showCSVStatus('Impossible de lire le fichier.', 'error'); return;
+        }
+
+        // Detect delimiter (same logic as backend)
+        const firstLine = text.split('\n')[0];
+        const delimiter = (firstLine.split(';').length - 1) >= (firstLine.split(',').length - 1) ? ';' : ',';
+
+        const parsed = parseCSVText(text, delimiter);
+        if (parsed.length <= 1) { showCSVStatus('Le fichier CSV est vide.', 'error'); return; }
+
+        const headers = parsed[0];
+        const rows = parsed.slice(1);
+
+        // Validate required columns
+        const required = ['Kilometrage','Annee_Facture','Annee_veh','Marque_veh','Modele_veh','Type_Energie','Carburant'];
+        const cleanHeaders = headers.map(h => h.replace(/^\ufeff/, '').trim());
+        const missing = required.filter(c => !cleanHeaders.includes(c));
+        if (missing.length > 0) {
+            showCSVStatus(`Colonnes manquantes : ${missing.join(', ')}`, 'error'); return;
+        }
+
+        const col = name => cleanHeaders.indexOf(name);
+
+        // 2. Build prediction payloads from rows
+        const vehicles = rows.map(row => ({
+            Kilometrage: parseFloat(row[col('Kilometrage')]) || 0,
+            Annee_Facture: parseFloat(String(row[col('Annee_Facture')]).replace(/T.*/, '').substring(0, 4)) || 0,
+            Annee_veh: parseFloat(String(row[col('Annee_veh')]).replace(/T.*/, '').substring(0, 4)) || 0,
+            Marque_veh: (row[col('Marque_veh')] || '').trim(),
+            Modele_veh: (row[col('Modele_veh')] || '').trim(),
+            Type_Energie: (row[col('Type_Energie')] || '').trim(),
+            Carburant: (row[col('Carburant')] || '').trim(),
+        }));
+
+        const total = vehicles.length;
+        const BATCH_SIZE = 50;
+        let done = 0;
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Prepare result rows (original columns + prediction columns)
+        const resultHeaders = [...headers, 'Prix_Predit', 'IC_95_Bas', 'IC_95_Haut', 'Erreur'];
+        const resultRows = [];
+
+        showCSVProgress(true);
+        setCSVProgress(0, total);
+
+        // 3. Send in batches to /predict/batch
+        for (let i = 0; i < total; i += BATCH_SIZE) {
+            const batch = vehicles.slice(i, i + BATCH_SIZE);
+            try {
+                const res = await fetch(`${API_BASE}/predict/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vehicles: batch }),
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || `Erreur ${res.status}`);
+                }
+                const data = await res.json();
+
+                for (const r of data.results) {
+                    const origRow = rows[r.index + i] || [];
+                    const enriched = [...origRow];
+                    // Pad if original row is shorter
+                    while (enriched.length < headers.length) enriched.push('');
+
+                    if (r.predicted_price != null) {
+                        enriched.push(r.predicted_price.toFixed(2));
+                        enriched.push(r.ic_low.toFixed(2));
+                        enriched.push(r.ic_high.toFixed(2));
+                        enriched.push('');
+                        successCount++;
+                    } else {
+                        enriched.push('');
+                        enriched.push('');
+                        enriched.push('');
+                        enriched.push(r.error || 'Erreur inconnue');
+                        errorCount++;
+                    }
+                    resultRows.push(enriched);
+                }
+            } catch (err) {
+                // Batch failed — mark all rows in this batch as errors
+                for (let j = 0; j < batch.length; j++) {
+                    const origRow = rows[i + j] || [];
+                    const enriched = [...origRow];
+                    while (enriched.length < headers.length) enriched.push('');
+                    enriched.push('', '', '', err.message);
+                    resultRows.push(enriched);
+                    errorCount++;
+                }
+            }
+
+            done = Math.min(i + BATCH_SIZE, total);
+            setCSVProgress(done, total);
+        }
+
+        // 4. Show results
+        showCSVStatus(
+            `${successCount} prédiction(s) réussie(s)` + (errorCount > 0 ? `, ${errorCount} erreur(s)` : ''),
+            errorCount > 0 ? '' : 'success'
+        );
+        lastCSVRows = { headers: resultHeaders, rows: resultRows };
+        renderCSVTable(resultHeaders, resultRows);
+        setTimeout(() => showCSVProgress(false), 2000);
     }
 
     function showCSVStatus(msg, type) { csvStatus.textContent = msg; csvStatus.className = 'csv-status visible' + (type ? ' ' + type : ''); }
 
-    function parseCSVText(text) {
+    function parseCSVText(text, delimiter) {
+        delimiter = delimiter || ',';
         return text.trim().split('\n').map(line => {
             const result = []; let current = ''; let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
                 const ch = line[i];
                 if (ch === '"') inQuotes = !inQuotes;
-                else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+                else if (ch === delimiter && !inQuotes) { result.push(current.trim()); current = ''; }
                 else current += ch;
             }
             result.push(current.trim()); return result;
         });
     }
 
-    function renderCSVTable(rows) {
-        const headers = rows[0]; const data = rows.slice(1);
+    function renderCSVTable(headers, data) {
         const priceIdx = headers.indexOf('Prix_Predit'); const errIdx = headers.indexOf('Erreur');
         let html = '<div class="csv-table-wrapper"><table><thead><tr>';
         headers.forEach(h => { html += `<th>${h}</th>`; });
@@ -664,8 +846,13 @@ console.log(<span class="str">"IC 95% :"</span>, data[<span class="str">"ic_0.95
     }
 
     function exportCSV() {
-        if (!lastCSVBlob) return;
-        const url = URL.createObjectURL(lastCSVBlob);
+        if (!lastCSVRows) return;
+        const { headers, rows } = lastCSVRows;
+        const escape = v => { const s = String(v); return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s; };
+        let csv = headers.map(escape).join(',') + '\n';
+        rows.forEach(row => { csv += row.map(escape).join(',') + '\n'; });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'predictions_vehicules.csv';
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
